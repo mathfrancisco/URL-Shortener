@@ -1,16 +1,18 @@
 package desafiourl.urlshortener.controller;
 
 import desafiourl.urlshortener.controller.dto.ShortenUrlRequest;
+import desafiourl.urlshortener.controller.dto.ShortenUrlResponse;
 import desafiourl.urlshortener.entities.UrlEntity;
 import desafiourl.urlshortener.repository.UrlRepository;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
+import java.net.URL;
 import java.time.LocalDateTime;
 
 
@@ -25,7 +27,7 @@ public class UrlController {
     }
 
     @PostMapping(value = "/shorten-url")
-    public ResponseEntity<Void> shortenUrl(@RequestBody ShortenUrlRequest request,
+    public ResponseEntity<ShortenUrlResponse> shortenUrl(@RequestBody ShortenUrlRequest request,
                                            HttpServletRequest servletRequest) {
 
      String id;
@@ -39,7 +41,24 @@ public class UrlController {
 
 
 
-    return ResponseEntity.ok().build();
+    return ResponseEntity.ok(new ShortenUrlResponse(redirectUrl));
     }
+
+    @GetMapping("{id}")
+    public ResponseEntity<Void> getUrl(@PathVariable("id") String id) {
+        var url = urlRepository.findById(id);
+
+        if ((url.isEmpty())){
+            return ResponseEntity.notFound().build();
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(URI.create(url.get().getFullurl()));
+
+        return  ResponseEntity.status(HttpStatus.FOUND).headers(headers).build();
+
+
+    }
+
 }
 
