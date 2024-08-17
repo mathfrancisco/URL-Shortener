@@ -10,12 +10,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.net.URI;
-import java.net.URL;
 import java.time.LocalDateTime;
 
-
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 
 public class UrlController {
