@@ -15,8 +15,8 @@ O Desafio Backend: Encurtador de URL é uma API RESTful que permite encurtar URL
 - **Encurtar URL**: A API permite encurtar URLs longas e gerar URLs curtas e fáceis de compartilhar;
 - **Listar URLs**: A API permite listar todas as URLs encurtadas armazenadas no banco de dados;
 - **Redirecionar URL**: A API permite redirecionar o usuário para a URL original a partir da URL encurtada.
-- 
+
 ## 📊 Próximos Passos
-Implementar autenticação e autorização: Implementar autenticação e autorização para garantir que apenas usuários autorizados possam encurtar URLs;
--**Melhorar a segurança**: Melhorar a segurança da API implementando medidas de segurança adicionais, como criptografia e validação de entrada;
--**Escalar a aplicação**: Escalar a aplicação para atender a um grande volume de requisições e garantir uma entrega eficiente e escalável.
+- **Implementar autenticação e autorização**: Implementar autenticação e autorização para garantir que apenas usuários autorizados possam encurtar URLs;
+- **Melhorar a segurança**: Melhorar a segurança da API implementando medidas de segurança adicionais, como criptografia e validação de entrada;
+- **Escalar a aplicação**: Escalar a aplicação para atender a um grande volume de requisições e garantir uma entrega eficiente e escalável.
