@@ -22,4 +22,4 @@ O Desafio Backend: Encurtador de URL é uma API RESTful que permite encurtar URL
 - **Escalar a aplicação**: Escalar a aplicação para atender a um grande volume de requisições e garantir uma entrega eficiente e escalável.
   
 ## 🚨 Veja como funciona
-![ProjetoURL-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/6ddfc743-099a-4655-a83c-40eeca0bf6f8)
+![ProjetoUrl](https://github.com/user-attachments/assets/0cc11699-7ee3-4bbb-9339-e8936dd4c6b5)
