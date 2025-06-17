@@ -5,6 +5,7 @@ import desafiourl.urlshortener.entities.dto.ShortenUrlResponse;
 import desafiourl.urlshortener.entities.dto.UpdateUrlMetadataRequest;
 import desafiourl.urlshortener.entities.dto.UrlStatsResponse;
 import desafiourl.urlshortener.service.UrlService;
+import desafiourl.urlshortener.exception.UrlNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,13 +18,12 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/url")
 public class UrlController {
 
     @Autowired
     private UrlService urlService;
 
-    @PostMapping("/shorten")
+    @PostMapping("/url/shorten")
     public ResponseEntity<ShortenUrlResponse> shortenUrl(
             @Valid @RequestBody ShortenUrlRequest request,
             HttpServletRequest servletRequest) {
@@ -40,30 +40,47 @@ public class UrlController {
         return ResponseEntity.ok(response);
     }
 
+    // Rota para redirecionamento - deve estar na raiz para funcionar com URLs encurtadas
     @GetMapping("/{id}")
     public ResponseEntity<Void> redirectUrl(
             @PathVariable String id,
             HttpServletRequest request) {
 
-        String clientIp = getClientIpAddress(request);
-        String userAgent = request.getHeader("User-Agent");
-        String referer = request.getHeader("Referer");
+        try {
+            String clientIp = getClientIpAddress(request);
+            String userAgent = request.getHeader("User-Agent");
+            String referer = request.getHeader("Referer");
 
-        String redirectUrl = urlService.processRedirect(id, clientIp, userAgent, referer);
+            String redirectUrl = urlService.processRedirect(id, clientIp, userAgent, referer);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(URI.create(redirectUrl));
+            HttpHeaders headers = new HttpHeaders();
+            headers.setLocation(URI.create(redirectUrl));
 
-        return ResponseEntity.status(HttpStatus.FOUND).headers(headers).build();
+            return ResponseEntity.status(HttpStatus.FOUND).headers(headers).build();
+
+        } catch (UrlNotFoundException e) {
+            // Retorna 404 se a URL não for encontrada
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            // Log do erro para debug
+            System.err.println("Erro no redirecionamento para ID: " + id + " - " + e.getMessage());
+            e.printStackTrace();
+            // Retorna 500 com mais informações
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @GetMapping("/url/{id}/stats")
     public ResponseEntity<UrlStatsResponse> getUrlStats(@PathVariable String id) {
-        UrlStatsResponse stats = urlService.getUrlStats(id);
-        return ResponseEntity.ok(stats);
+        try {
+            UrlStatsResponse stats = urlService.getUrlStats(id);
+            return ResponseEntity.ok(stats);
+        } catch (UrlNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
-    @GetMapping("/urls")
+    @GetMapping("/url/urls")
     public ResponseEntity<List<UrlStatsResponse>> getUserUrls(HttpServletRequest request) {
         String clientIp = getClientIpAddress(request);
         List<UrlStatsResponse> statsResponses = urlService.getUserUrls(clientIp);
@@ -75,9 +92,13 @@ public class UrlController {
             @PathVariable String id,
             HttpServletRequest request) {
 
-        String clientIp = getClientIpAddress(request);
-        urlService.deactivateUrl(id, clientIp);
-        return ResponseEntity.ok().build();
+        try {
+            String clientIp = getClientIpAddress(request);
+            urlService.deactivateUrl(id, clientIp);
+            return ResponseEntity.ok().build();
+        } catch (UrlNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PutMapping("/url/{id}/metadata")
@@ -86,9 +107,13 @@ public class UrlController {
             @RequestBody UpdateUrlMetadataRequest request,
             HttpServletRequest servletRequest) {
 
-        String clientIp = getClientIpAddress(servletRequest);
-        UrlStatsResponse stats = urlService.updateUrlMetadata(id, request, clientIp);
-        return ResponseEntity.ok(stats);
+        try {
+            String clientIp = getClientIpAddress(servletRequest);
+            UrlStatsResponse stats = urlService.updateUrlMetadata(id, request, clientIp);
+            return ResponseEntity.ok(stats);
+        } catch (UrlNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/url/{id}")
@@ -96,9 +121,13 @@ public class UrlController {
             @PathVariable String id,
             HttpServletRequest request) {
 
-        String clientIp = getClientIpAddress(request);
-        urlService.deleteUrl(id, clientIp);
-        return ResponseEntity.noContent().build();
+        try {
+            String clientIp = getClientIpAddress(request);
+            urlService.deleteUrl(id, clientIp);
+            return ResponseEntity.noContent().build();
+        } catch (UrlNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     private String getClientIpAddress(HttpServletRequest request) {
