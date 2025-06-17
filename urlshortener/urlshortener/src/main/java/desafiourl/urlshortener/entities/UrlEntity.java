@@ -1,53 +1,53 @@
 package desafiourl.urlshortener.entities;
 
-
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-
 import java.time.LocalDateTime;
 
+@Setter
+@Getter
 @Document(collection = "urls")
-
 public class UrlEntity {
+    // Getters and Setters
     @Id
     private String id;
-
-    private String fullurl;
-
+    private String fullUrl;
+    private String customAlias;
+    private LocalDateTime createdAt;
     @Indexed(expireAfterSeconds = 0)
     private LocalDateTime expirationDate;
+    private String creatorIp;
+    private boolean isActive;
+    private long clickCount;
+    private String title;
+    private String description;
 
     public UrlEntity() {
+        this.createdAt = LocalDateTime.now();
+        this.isActive = true;
+        this.clickCount = 0;
     }
 
-    public UrlEntity(String id, String fullurl, LocalDateTime expirationDate) {
+    public UrlEntity(String id, String fullUrl, LocalDateTime expirationDate) {
+        this();
         this.id = id;
-        this.fullurl = fullurl;
+        this.fullUrl = fullUrl;
         this.expirationDate = expirationDate;
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
+    public UrlEntity(String id, String fullUrl, String customAlias, LocalDateTime expirationDate, String creatorIp) {
+        this();
         this.id = id;
-    }
-
-    public String getFullurl() {
-        return fullurl;
-    }
-
-    public void setFullurl(String fullurl) {
-        this.fullurl = fullurl;
-    }
-
-    public LocalDateTime getExpirationDate() {
-        return expirationDate;
-    }
-
-    public void setExpirationDate(LocalDateTime expirationDate) {
+        this.fullUrl = fullUrl;
+        this.customAlias = customAlias;
         this.expirationDate = expirationDate;
+        this.creatorIp = creatorIp;
+    }
+
+    public void incrementClickCount() {
+        this.clickCount++;
     }
 }

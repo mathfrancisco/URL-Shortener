@@ -1,4 +1,4 @@
-package desafiourl.urlshortener.controller.dto;
+package desafiourl.urlshortener.entities.dto;
 
 public record ShortenUrlResponse(String url) {
 }
