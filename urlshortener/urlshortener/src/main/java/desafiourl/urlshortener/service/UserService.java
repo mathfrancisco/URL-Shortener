@@ -163,11 +163,22 @@ public class UserService {
         log.info("Tentativa de verificação de email com token: {}", request.token());
 
         UserEntity user = userRepository.findByEmailVerificationToken(request.token())
-                .orElseThrow(() -> new IllegalArgumentException("Token de verificação inválido"));
+                .orElseThrow(() -> new IllegalArgumentException("Token de verificação inválido ou expirado"));
+
+        if (user.isEmailVerified()) {
+            throw new IllegalArgumentException("Email já verificado");
+        }
 
         user.setEmailVerified(true);
         user.setEmailVerificationToken(null);
         userRepository.save(user);
+
+        // Enviar email de boas-vindas após verificação
+        try {
+            emailService.sendWelcomeEmail(user);
+        } catch (Exception e) {
+            log.error("Erro ao enviar email de boas-vindas: {}", e.getMessage());
+        }
 
         log.info("Email verificado com sucesso para usuário: {}", user.getUsername());
     }

@@ -6,3 +6,36 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+
+# ==================================================
+# ARQUIVOS SENSÍVEIS - NÃO COMMITAR
+# ==================================================
+
+# Arquivo de variáveis de ambiente
+.env
+.env.local
+.env.development
+.env.production
+
+# Logs
+*.log
+logs/
+
+# Arquivos de configuração sensíveis
+application-*.properties
+!application.properties
+
+# Arquivos temporários
+*.tmp
+*.temp
+
+# Arquivos de backup
+*.bak
+*.backup
+
+# Dados do MongoDB (se estiver usando localmente)
+data/
+mongodb/
+
+# GeoIP Database (se for privada)
+# src/main/resources/GeoLite2-*.mmdb
