@@ -17,7 +17,7 @@ public class UrlEntity {
     private String fullUrl;
     private String customAlias;
     private LocalDateTime createdAt;
-    @Indexed(expireAfterSeconds = 0)
+    @Indexed(expireAfter = "0")
     private LocalDateTime expirationDate;
     private String creatorIp;
     private boolean isActive;

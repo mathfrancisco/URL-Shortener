@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bem-vindo!</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .logo { font-size: 24px; font-weight: bold; color: #3b82f6; }
+        .content { text-align: center; margin: 30px 0; }
+        .button { display: inline-block; background-color: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+        .plan-info { background-color: #f0f9ff; border: 1px solid #3b82f6; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .feature-list { text-align: left; margin: 20px 0; }
+        .feature-list ul { padding-left: 20px; }
+        .emoji { font-size: 24px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="logo" th:text="${appName}">URL Shortener</div>
+    </div>
+
+    <div class="content">
+        <div class="emoji">🎉</div>
+        <h2>Bem-vindo ao <span th:text="${appName}">URL Shortener</span>!</h2>
+        <p>Olá, <strong th:text="${userName}">Nome</strong>!</p>
+        <p>Parabéns! Sua conta foi criada com sucesso e está pronta para uso.</p>
+
+        <div class="plan-info">
+            <h3>Detalhes da sua conta:</h3>
+            <p><strong>Usuário:</strong> <span th:text="${username}">username</span></p>
+            <p><strong>Plano:</strong> <span th:text="${planType}">FREE</span></p>
+            <p><strong>Limite mensal:</strong> <span th:text="${monthlyLimit}">100</span> URLs</p>
+        </div>
+
+        <div class="feature-list">
+            <h3>✨ O que você pode fazer:</h3>
+            <ul>
+                <li>Encurtar URLs longas instantaneamente</li>
+                <li>Personalizar links com aliases únicos</li>
+                <li>Acompanhar cliques e estatísticas</li>
+                <li>Gerenciar todos os seus links em um só lugar</li>
+                <li>Compartilhar facilmente em redes sociais</li>
+            </ul>
+        </div>
+
+        <p>Comece agora mesmo acessando seu painel:</p>
+
+        <a th:href="${dashboardUrl}" class="button">Acessar Dashboard</a>
+    </div>
+
+    <div class="footer">
+        <p>Precisa de ajuda? Entre em contato conosco!</p>
+        <p>&copy; 2024 <span th:text="${appName}">URL Shortener</span>. Todos os direitos reservados.</p>
+    </div>
+</div>
+</body>
+</html>

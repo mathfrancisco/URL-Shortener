@@ -1,7 +1,7 @@
 package desafiourl.urlshortener.service;
 
 import desafiourl.urlshortener.entities.dto.GeoLocationInfo;
-import desafiourl.urlshortener.entities.dto.UrlAnalyticsResponse;
+import desafiourl.urlshortener.entities.dto.response.UrlAnalyticsResponse;
 import desafiourl.urlshortener.entities.ClickEntity;
 import desafiourl.urlshortener.entities.UrlEntity;
 import desafiourl.urlshortener.repository.ClickRepository;

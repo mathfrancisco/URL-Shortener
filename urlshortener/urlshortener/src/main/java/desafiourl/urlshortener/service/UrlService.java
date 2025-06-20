@@ -2,9 +2,9 @@ package desafiourl.urlshortener.service;
 
 import desafiourl.urlshortener.entities.ClickEntity;
 import desafiourl.urlshortener.entities.UrlEntity;
-import desafiourl.urlshortener.entities.dto.ShortenUrlResponse;
-import desafiourl.urlshortener.entities.dto.UpdateUrlMetadataRequest;
-import desafiourl.urlshortener.entities.dto.UrlStatsResponse;
+import desafiourl.urlshortener.entities.dto.response.ShortenUrlResponse;
+import desafiourl.urlshortener.entities.dto.request.UpdateUrlMetadataRequest;
+import desafiourl.urlshortener.entities.dto.response.UrlStatsResponse;
 import desafiourl.urlshortener.exception.InvalidUrlException;
 import desafiourl.urlshortener.exception.UrlNotFoundException;
 import desafiourl.urlshortener.repository.ClickRepository;

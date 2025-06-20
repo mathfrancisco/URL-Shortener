@@ -1,4 +1,4 @@
-package desafiourl.urlshortener.entities.dto;
+package desafiourl.urlshortener.entities.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.List;

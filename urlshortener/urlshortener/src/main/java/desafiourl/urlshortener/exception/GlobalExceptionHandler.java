@@ -1,6 +1,6 @@
 package desafiourl.urlshortener.exception;
 
-import desafiourl.urlshortener.entities.dto.ErrorResponse;
+import desafiourl.urlshortener.entities.dto.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

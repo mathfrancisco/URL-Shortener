@@ -1,4 +1,4 @@
-package desafiourl.urlshortener.entities.dto;
+package desafiourl.urlshortener.entities.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
