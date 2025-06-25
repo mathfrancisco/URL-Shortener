@@ -1,35 +1,58 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Suspense, lazy } from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+// Lazy loading para otimização
+const PublicPages = {
+    Home: lazy(() => import('./pages/public/Home')),
+     Login: lazy(() => import('./pages/public/Login')),
+     Register: lazy(() => import('./pages/public/Register'))
 }
 
-export default App
+ const PrivatePages = {
+    // Dashboard: lazy(() => import('./pages/private/Dashboard')),
+     Home: lazy(() => import('./pages/private/Home'))
+    // Analytics: lazy(() => import('./pages/private/Analytics')),
+ }
+
+// Loading component
+const LoadingSpinner = () => (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+)
+
+export default function App() {
+    return (
+        <Router>
+            <Suspense fallback={<LoadingSpinner />}>
+                <Routes>
+                    {/* Public Routes */}
+                    <Route path="/" element={<PublicPages.Home />} />
+                    {<Route path="/login" element={<PublicPages.Login />} />}
+                    {<Route path="/register" element={<PublicPages.Register />} />}
+
+                    {/* Private Routes */}
+                    {/*<Route path="/dashboard" element={<PrivatePages.Dashboard />} />*/}
+                    <Route path="/home" element={<PrivatePages.Home />} />
+                    {/*<Route path="/analytics" element={<PrivatePages.Analytics />} />*/}
+
+                    {/* 404 Route */}
+                    <Route path="*" element={
+                        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+                            <div className="text-center">
+                                <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
+                                <p className="text-xl text-gray-600 mb-8">Página não encontrada</p>
+                                <a
+                                    href="/"
+                                    className="bg-blue-600 px-6 py-3 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                    Voltar ao início
+                                </a>
+                            </div>
+                        </div>
+                    } />
+                </Routes>
+            </Suspense>
+        </Router>
+    )
+}
