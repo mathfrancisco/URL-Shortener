@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, TrendingUp, Users, MousePointerClick, Copy, CheckCircle } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
 import CreateUrlFormComponent from '@/components/forms/CreateUrlForm';
@@ -7,31 +7,94 @@ import { useGlobalStats } from '@/hooks/useUrls';
 const HomePage: React.FC = () => {
     const [createdUrl, setCreatedUrl] = useState<any>(null);
     const [currentPath, setCurrentPath] = useState('/');
+    const [copySuccess, setCopySuccess] = useState(false);
     const { data: globalStats, isLoading: statsLoading } = useGlobalStats();
 
     const handleUrlCreated = (result: any) => {
+        console.log('URL criada:', result); // Debug log
         setCreatedUrl(result);
     };
 
     const handleCopyUrl = async () => {
-        if (createdUrl?.shortUrl) {
+        if (!createdUrl) return;
+
+        // Determinar qual propriedade contém a URL encurtada
+        const shortUrl = createdUrl.shortUrl ||
+            createdUrl.shortened_url ||
+            createdUrl.short_url ||
+            createdUrl.url ||
+            '';
+
+        console.log('Tentando copiar URL:', shortUrl); // Debug log
+
+        if (!shortUrl) {
+            console.error('URL encurtada não encontrada no objeto:', createdUrl);
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(shortUrl);
+            setCopySuccess(true);
+            setTimeout(() => setCopySuccess(false), 2000);
+            console.log('URL copiada com sucesso:', shortUrl);
+        } catch (error) {
+            console.error('Failed to copy URL:', error);
+            // Fallback para navegadores mais antigos
+            const textArea = document.createElement('textarea');
+            textArea.value = shortUrl;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
             try {
-                await navigator.clipboard.writeText(createdUrl.shortUrl);
-            } catch (error) {
-                console.error('Failed to copy URL');
+                document.execCommand('copy');
+                setCopySuccess(true);
+                setTimeout(() => setCopySuccess(false), 2000);
+                console.log('URL copiada com fallback:', shortUrl);
+            } catch (fallbackError) {
+                console.error('Fallback copy failed:', fallbackError);
+            } finally {
+                document.body.removeChild(textArea);
             }
         }
     };
 
     const handleNavigate = (path: string) => {
         setCurrentPath(path);
-        // Aqui você implementaria a navegação real
         console.log('Navigating to:', path);
     };
 
     const handleLogout = () => {
-        // Implementar logout
         console.log('Logging out...');
+    };
+
+    // Debug: Log quando createdUrl muda
+    useEffect(() => {
+        console.log('createdUrl state changed:', createdUrl);
+    }, [createdUrl]);
+
+    // Função para extrair a URL encurtada
+    const getShortUrl = () => {
+        if (!createdUrl) return '';
+        return createdUrl.shortUrl ||
+            createdUrl.shortened_url ||
+            createdUrl.short_url ||
+            createdUrl.url ||
+            'URL não disponível';
+    };
+
+    // Função para extrair a URL original
+    const getOriginalUrl = () => {
+        if (!createdUrl) return '';
+        return createdUrl.originalUrl ||
+            createdUrl.original_url ||
+            createdUrl.longUrl ||
+            createdUrl.long_url ||
+            createdUrl.target_url ||
+            'URL original não disponível';
     };
 
     const stats = [
@@ -56,7 +119,7 @@ const HomePage: React.FC = () => {
         {
             icon: <TrendingUp className="w-8 h-8" />,
             title: "Cliques Hoje",
-            value: globalStats?.totalClicks || 0,
+            value: globalStats?.totalUrls || globalStats?.totalClicks || 0,
             suffix: ""
         }
     ];
@@ -129,23 +192,67 @@ const HomePage: React.FC = () => {
                                 URL Encurtada com Sucesso!
                             </h3>
                             <div className="bg-white border border-green-200 rounded-lg p-4 mb-4">
-                                <div className="flex items-center justify-between gap-4">
-                                    <span className="text-lg font-medium text-purple-600 truncate">
-                                        {createdUrl.shortUrl}
-                                    </span>
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm text-gray-500 mb-1">URL Encurtada:</p>
+                                        <span className="text-lg font-medium text-purple-600 break-all">
+                                            {getShortUrl()}
+                                        </span>
+                                    </div>
                                     <button
                                         onClick={handleCopyUrl}
-                                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                                            copySuccess
+                                                ? 'bg-green-600 text-white'
+                                                : 'bg-purple-600 text-white hover:bg-purple-700'
+                                        }`}
                                     >
-                                        <Copy className="w-4 h-4" />
-                                        Copiar
+                                        {copySuccess ? (
+                                            <>
+                                                <CheckCircle className="w-4 h-4" />
+                                                Copiado!
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Copy className="w-4 h-4" />
+                                                Copiar
+                                            </>
+                                        )}
                                     </button>
                                 </div>
                             </div>
-                            <p className="text-sm text-gray-600">
-                                Sua URL original:
-                                <span className="font-medium"> {createdUrl.originalUrl}</span>
-                            </p>
+                            <div className="text-left bg-gray-50 rounded-lg p-3">
+                                <p className="text-sm text-gray-600 mb-1">
+                                    <strong>URL Original:</strong>
+                                </p>
+                                <p className="text-sm text-gray-800 break-all">
+                                    {getOriginalUrl()}
+                                </p>
+                                {createdUrl.id && (
+                                    <p className="text-xs text-gray-500 mt-2">
+                                        ID: {createdUrl.id}
+                                    </p>
+                                )}
+                                {createdUrl.expiresAt && (
+                                    <p className="text-xs text-gray-500">
+                                        Expira em: {new Date(createdUrl.expiresAt).toLocaleString('pt-BR')}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Debug Info - Remove em produção */}
+                {process.env.NODE_ENV === 'development' && createdUrl && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <h4 className="text-sm font-medium text-yellow-800 mb-2">Debug Info:</h4>
+                        <pre className="text-xs text-yellow-700 overflow-auto">
+                            {JSON.stringify(createdUrl, null, 2)}
+                        </pre>
+                        <div className="mt-2 text-xs text-yellow-700">
+                            <p><strong>Short URL extraída:</strong> {getShortUrl()}</p>
+                            <p><strong>Original URL extraída:</strong> {getOriginalUrl()}</p>
                         </div>
                     </div>
                 )}

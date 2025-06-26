@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { Link, Clock, Settings, Loader2, AlertCircle } from 'lucide-react';
 import {useCreateShortUrl, useUrlPreview} from "@/hooks/useUrls.ts";
 
-
 const createUrlSchema = z.object({
     url: z.string().url('Por favor, insira uma URL válida'),
     customAlias: z.string()
@@ -52,15 +51,24 @@ const CreateUrlFormComponent: React.FC<CreateUrlFormProps> = ({
 
     const onSubmit = async (data: CreateUrlForm) => {
         try {
+            console.log('Enviando dados:', data);
             const result = await createUrl.mutateAsync(data);
-            onSuccess?.(result);
-            if (!onSuccess) {
-                // If no onSuccess handler, reset form
+            console.log('Resultado recebido:', result);
+
+            const enrichedResult = {
+                ...result,
+                originalUrl: data.url, // Capturar do formulário
+                inputData: data // Para debug
+            };
+
+            if (onSuccess) {
+                onSuccess(enrichedResult);
+            } else {
                 reset();
                 setShowAdvanced(false);
             }
         } catch (error) {
-            // Error handling is done in the hook
+            console.error('Erro ao criar URL:', error);
         }
     };
 
@@ -113,8 +121,8 @@ const CreateUrlFormComponent: React.FC<CreateUrlFormProps> = ({
                     <Settings className="w-4 h-4" />
                     Opções Avançadas
                     <span className={`transform transition-transform ${showAdvanced ? 'rotate-180' : ''}`}>
-            ▼
-          </span>
+                        ▼
+                    </span>
                 </button>
 
                 {/* Advanced Options */}
@@ -126,9 +134,9 @@ const CreateUrlFormComponent: React.FC<CreateUrlFormProps> = ({
                                 Alias Personalizado (opcional)
                             </label>
                             <div className="flex items-center">
-                <span className="bg-gray-100 px-3 py-3 rounded-l-lg border border-r-0 text-sm text-gray-600">
-                  short.ly/
-                </span>
+                                <span className="bg-gray-100 px-3 py-3 rounded-l-lg border border-r-0 text-sm text-gray-600">
+                                    short.ly/
+                                </span>
                                 <input
                                     {...register('customAlias')}
                                     type="text"
@@ -161,7 +169,7 @@ const CreateUrlFormComponent: React.FC<CreateUrlFormProps> = ({
                                 render={({ field }) => (
                                     <select
                                         {...field}
-                                        onChange={(e) => field.onChange(Number(e.target.value))}
+                                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                                         className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-colors"
                                     >
                                         <option value="">Sem expiração</option>
