@@ -5,8 +5,8 @@ import {LoginForm} from "@/components/forms/LoginForms.tsx";
 
 export default function Login() {
     const handleLoginSuccess = () => {
-        // Redirect to dashboard on successful login
-        window.location.href = '/dashboard'
+        // Redirect to home on successful login
+        window.location.href = '/home'
     }
 
     const handleForgotPassword = () => {

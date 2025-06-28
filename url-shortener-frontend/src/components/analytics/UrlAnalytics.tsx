@@ -15,7 +15,6 @@ import {
     Calendar,
     TrendingUp,
     Users,
-    Clock
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { TimelineChart } from './TimelineChart';
@@ -23,8 +22,7 @@ import { GeographicStats } from './GeographicStats';
 import { DeviceStats } from './DeviceStats';
 import { ReferrerStats } from './ReferrerStats';
 import { ExportButton } from './ExportButton';
-import { StatsCard } from './StatsCard';
-import { RecentClicksTable } from './RecentClicksTable';
+import StatsCard from "@/components/display/StatsCard.tsx";
 
 export function UrlAnalytics() {
     const { urlId } = useParams<{ urlId: string }>();
@@ -88,27 +86,23 @@ export function UrlAnalytics() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatsCard
                     title="Total Clicks"
-                    value={summary.data?.totalClicks}
-                    icon={<MousePointer className="h-4 w-4" />}
-                    loading={isLoading}
+                    value={summary.data?.totalClicks ?? 0}
+                    icon={MousePointer}
                 />
                 <StatsCard
                     title="Unique Visitors"
-                    value={summary.data?.uniqueVisitors}
-                    icon={<Users className="h-4 w-4" />}
-                    loading={isLoading}
+                    value={summary.data?.uniqueVisitors ?? 0}
+                    icon={Users}
                 />
                 <StatsCard
                     title="Clicks Today"
-                    value={summary.data?.clicksToday}
-                    icon={<Calendar className="h-4 w-4" />}
-                    loading={isLoading}
+                    value={summary.data?.clicksToday ?? 0}
+                    icon={Calendar}
                 />
                 <StatsCard
                     title="Avg Clicks/Day"
-                    value={summary.data?.avgClicksPerDay ? summary.data.avgClicksPerDay.toFixed(1) : undefined}
-                    icon={<TrendingUp className="h-4 w-4" />}
-                    loading={isLoading}
+                    value={summary.data?.avgClicksPerDay ? summary.data.avgClicksPerDay.toFixed(1) : '0.0'}
+                    icon={TrendingUp}
                 />
             </div>
 
@@ -176,22 +170,6 @@ export function UrlAnalytics() {
                             </CardContent>
                         </Card>
                     </div>
-
-                    {/* Recent Clicks */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Clock className="h-5 w-5" />
-                                Recent Clicks
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <RecentClicksTable
-                                clicks={analytics.data?.recentClicks || []}
-                                loading={isLoading}
-                            />
-                        </CardContent>
-                    </Card>
                 </TabsContent>
 
                 <TabsContent value="geographic">
@@ -222,7 +200,11 @@ export function UrlAnalytics() {
                             <CardTitle>Traffic Sources</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <ReferrerStats data={referrers.data} loading={isLoading} />
+                            <ReferrerStats
+                                data={referrers.data}
+                                loading={isLoading}
+                                compact
+                            />
                         </CardContent>
                     </Card>
                 </TabsContent>

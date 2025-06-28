@@ -1,12 +1,19 @@
+
+import { useNavigate } from 'react-router-dom';
 import Header from "@/components/layout/HeaderLP.tsx"
 import Footer from "@/components/layout/Footer.tsx"
 import {RegisterForm} from "@/components/forms/RegisterForms.tsx";
 
-
 export default function Register() {
+    const navigate = useNavigate();
+
     const handleRegisterSuccess = () => {
-        // Redirect to dashboard on successful registration
-        window.location.href = '/dashboard'
+        // Mostrar mensagem de sucesso e redirecionar para página de instruções
+        navigate('/verify-email/', {
+            state: {
+                message: 'Conta criada com sucesso! Verifique seu email para ativar sua conta.'
+            }
+        });
     }
 
     return (
@@ -16,6 +23,9 @@ export default function Register() {
             <main className="flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20">
                 <div className="max-w-md w-full">
                     <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold text-gray-900">
+                            Criar Conta
+                        </h1>
                         <p className="mt-2 text-sm text-gray-600">
                             Já tem uma conta?{' '}
                             <a href="/login" className="font-medium text-blue-600 hover:text-blue-500">

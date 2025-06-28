@@ -43,6 +43,18 @@ export interface ClickEntity {
     city?: string;
 }
 
+export interface TimelineDataPoint {
+    date: string;
+    clicks: number;
+    uniqueVisitors?: number;
+}
+
+export interface TimelineData {
+    data: TimelineDataPoint[];
+    totalClicks: number;
+    totalUniqueVisitors?: number;
+}
+
 export interface StatsSummary {
     totalClicks: number;
     uniqueVisitors: number;

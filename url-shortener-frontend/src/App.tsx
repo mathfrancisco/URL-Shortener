@@ -4,15 +4,18 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 // Lazy loading para otimização
 const PublicPages = {
     Home: lazy(() => import('./pages/public/Home')),
-     Login: lazy(() => import('./pages/public/Login')),
-     Register: lazy(() => import('./pages/public/Register'))
+    Login: lazy(() => import('./pages/public/Login')),
+    Register: lazy(() => import('./pages/public/Register')),
+    VerifyEmail: lazy(() => import('./pages/public/VerifyEmail')),
+    ResendVerification: lazy(() => import('./pages/public/ResendVerification')),
+    EmailSent: lazy(() => import('./pages/public/EmailSent')),
 }
 
- const PrivatePages = {
+const PrivatePages = {
     // Dashboard: lazy(() => import('./pages/private/Dashboard')),
-     Home: lazy(() => import('./pages/private/Home'))
-    // Analytics: lazy(() => import('./pages/private/Analytics')),
- }
+    Home: lazy(() => import('./pages/private/Home')),
+    Analytics: lazy(() => import('./pages/private/Analytics')),
+}
 
 // Loading component
 const LoadingSpinner = () => (
@@ -28,13 +31,17 @@ export default function App() {
                 <Routes>
                     {/* Public Routes */}
                     <Route path="/" element={<PublicPages.Home />} />
-                    {<Route path="/login" element={<PublicPages.Login />} />}
-                    {<Route path="/register" element={<PublicPages.Register />} />}
+                    <Route path="/login" element={<PublicPages.Login />} />
+                    <Route path="/register" element={<PublicPages.Register />} />
+                    <Route path="/verify-email" element={<PublicPages.VerifyEmail />} />
+                    <Route path="/resend-verification" element={<PublicPages.ResendVerification />} />
+                    <Route path="/email-sent" element={<PublicPages.EmailSent />} />
 
                     {/* Private Routes */}
                     {/*<Route path="/dashboard" element={<PrivatePages.Dashboard />} />*/}
                     <Route path="/home" element={<PrivatePages.Home />} />
-                    {/*<Route path="/analytics" element={<PrivatePages.Analytics />} />*/}
+                    {/* Rota corrigida com parâmetro urlId */}
+                    <Route path="/analytics/:urlId" element={<PrivatePages.Analytics />} />
 
                     {/* 404 Route */}
                     <Route path="*" element={

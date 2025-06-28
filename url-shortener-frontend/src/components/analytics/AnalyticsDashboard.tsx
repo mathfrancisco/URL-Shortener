@@ -7,7 +7,7 @@ import { Activity, Link, MousePointer, TrendingUp } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { TopUrlsTable } from './TopUrlsTable';
-import { StatsCard } from './StatsCard';
+import StatsCard from "@/components/display/StatsCard.tsx";
 
 export function AnalyticsDashboard() {
     const { data: dashboardStats, isPending: isLoadingDashboard, error: dashboardError } = useDashboardStats();
@@ -36,26 +36,26 @@ export function AnalyticsDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatsCard
                     title="Total URLs"
-                    value={dashboardStats?.totalUrls}
-                    icon={<Link className="h-4 w-4" />}
+                    value={dashboardStats?.totalUrls ?? 0}
+                    icon={Link}
                     loading={isLoadingDashboard}
                 />
                 <StatsCard
                     title="Total Clicks"
-                    value={dashboardStats?.totalClicks}
-                    icon={<MousePointer className="h-4 w-4" />}
+                    value={dashboardStats?.totalClicks ?? 0}
+                    icon={MousePointer}
                     loading={isLoadingDashboard}
                 />
                 <StatsCard
                     title="Active URLs"
-                    value={dashboardStats?.activeUrls}
-                    icon={<Activity className="h-4 w-4" />}
+                    value={dashboardStats?.activeUrls ?? 0}
+                    icon={Activity}
                     loading={isLoadingDashboard}
                 />
                 <StatsCard
                     title="Avg Clicks/URL"
-                    value={dashboardStats?.avgClicksPerUrl ? dashboardStats.avgClicksPerUrl.toFixed(1) : undefined}
-                    icon={<TrendingUp className="h-4 w-4" />}
+                    value={dashboardStats?.avgClicksPerUrl ? dashboardStats.avgClicksPerUrl.toFixed(1) : "0.0"}
+                    icon={TrendingUp}
                     loading={isLoadingDashboard}
                 />
             </div>
