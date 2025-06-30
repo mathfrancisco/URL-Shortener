@@ -1,31 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { Link, TrendingUp, Users, MousePointerClick, Copy, CheckCircle } from 'lucide-react';
+import { Link, TrendingUp,  MousePointerClick, Copy, CheckCircle, Activity } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
 import CreateUrlFormComponent from '@/components/forms/CreateUrlForm';
+import StatsCard from '@/components/display/StatsCard';
+import { useDashboardStats, useTopUrls } from '@/hooks/useAnalytics';
 import { useGlobalStats } from '@/hooks/useUrls';
 
 const HomePage: React.FC = () => {
     const [createdUrl, setCreatedUrl] = useState<any>(null);
     const [currentPath, setCurrentPath] = useState('/');
     const [copySuccess, setCopySuccess] = useState(false);
-    const { data: globalStats, isLoading: statsLoading } = useGlobalStats();
+
+    // Use real analytics hooks
+    const { data: dashboardStats, isPending: dashboardLoading, error: dashboardError } = useDashboardStats();
+    const { data: topUrls, isPending: topUrlsLoading } = useTopUrls(5, 'clicks');
+    const { data: globalStats, isLoading: globalStatsLoading } = useGlobalStats();
 
     const handleUrlCreated = (result: any) => {
-        console.log('URL criada:', result); // Debug log
+        console.log('URL criada:', result);
         setCreatedUrl(result);
     };
 
     const handleCopyUrl = async () => {
         if (!createdUrl) return;
 
-        // Determinar qual propriedade contém a URL encurtada
         const shortUrl = createdUrl.shortUrl ||
             createdUrl.shortened_url ||
             createdUrl.short_url ||
             createdUrl.url ||
             '';
 
-        console.log('Tentando copiar URL:', shortUrl); // Debug log
+        console.log('Tentando copiar URL:', shortUrl);
 
         if (!shortUrl) {
             console.error('URL encurtada não encontrada no objeto:', createdUrl);
@@ -39,7 +44,6 @@ const HomePage: React.FC = () => {
             console.log('URL copiada com sucesso:', shortUrl);
         } catch (error) {
             console.error('Failed to copy URL:', error);
-            // Fallback para navegadores mais antigos
             const textArea = document.createElement('textarea');
             textArea.value = shortUrl;
             textArea.style.position = 'fixed';
@@ -71,12 +75,10 @@ const HomePage: React.FC = () => {
         console.log('Logging out...');
     };
 
-    // Debug: Log quando createdUrl muda
     useEffect(() => {
         console.log('createdUrl state changed:', createdUrl);
     }, [createdUrl]);
 
-    // Função para extrair a URL encurtada
     const getShortUrl = () => {
         if (!createdUrl) return '';
         return createdUrl.shortUrl ||
@@ -86,7 +88,6 @@ const HomePage: React.FC = () => {
             'URL não disponível';
     };
 
-    // Função para extrair a URL original
     const getOriginalUrl = () => {
         if (!createdUrl) return '';
         return createdUrl.originalUrl ||
@@ -97,41 +98,50 @@ const HomePage: React.FC = () => {
             'URL original não disponível';
     };
 
-    const stats = [
+    // Real statistics data with fallbacks
+    const statsData = [
         {
-            icon: <Link className="w-8 h-8" />,
             title: "URLs Criadas",
-            value: globalStats?.totalUrls || 0,
-            suffix: "+"
+            value: dashboardStats?.totalUrls || globalStats?.totalUrls || 0,
+            icon: Link,
+            loading: dashboardLoading || globalStatsLoading,
+            description: "Total de URLs encurtadas"
         },
         {
-            icon: <MousePointerClick className="w-8 h-8" />,
             title: "Total de Cliques",
-            value: globalStats?.totalClicks || 0,
-            suffix: "+"
+            value: dashboardStats?.totalClicks || globalStats?.totalClicks || 0,
+            icon: MousePointerClick,
+            loading: dashboardLoading || globalStatsLoading,
+            description: "Cliques em todas as URLs"
         },
         {
-            icon: <Users className="w-8 h-8" />,
-            title: "Usuários Ativos",
-            value: globalStats?.activeUsers || 0,
-            suffix: "+"
+            title: "URLs Ativas",
+            value: dashboardStats?.activeUrls || globalStats?.activeUsers || 0,
+            icon: Activity,
+            loading: dashboardLoading || globalStatsLoading,
+            description: "URLs com cliques recentes"
         },
         {
-            icon: <TrendingUp className="w-8 h-8" />,
-            title: "Cliques Hoje",
-            value: globalStats?.totalUrls || globalStats?.totalClicks || 0,
-            suffix: ""
+            title: "Média de Cliques",
+            value: dashboardStats?.avgClicksPerUrl ? dashboardStats.avgClicksPerUrl.toFixed(1) : "0.0",
+            icon: TrendingUp,
+            loading: dashboardLoading,
+            description: "Cliques por URL",
+            isFloat: true
         }
     ];
 
-    const formatNumber = (num: number) => {
-        if (num >= 1000000) {
-            return (num / 1000000).toFixed(1) + 'M';
+    const formatNumber = (num: number | string) => {
+        const numValue = typeof num === 'string' ? parseFloat(num) : num;
+        if (isNaN(numValue)) return '0';
+
+        if (numValue >= 1000000) {
+            return (numValue / 1000000).toFixed(1) + 'M';
         }
-        if (num >= 1000) {
-            return (num / 1000).toFixed(1) + 'K';
+        if (numValue >= 1000) {
+            return (numValue / 1000).toFixed(1) + 'K';
         }
-        return num.toString();
+        return numValue.toString();
     };
 
     return (
@@ -243,51 +253,116 @@ const HomePage: React.FC = () => {
                     </div>
                 )}
 
-                {/* Debug Info - Remove em produção */}
-                {process.env.NODE_ENV === 'development' && createdUrl && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        <h4 className="text-sm font-medium text-yellow-800 mb-2">Debug Info:</h4>
-                        <pre className="text-xs text-yellow-700 overflow-auto">
-                            {JSON.stringify(createdUrl, null, 2)}
-                        </pre>
-                        <div className="mt-2 text-xs text-yellow-700">
-                            <p><strong>Short URL extraída:</strong> {getShortUrl()}</p>
-                            <p><strong>Original URL extraída:</strong> {getOriginalUrl()}</p>
-                        </div>
-                    </div>
-                )}
-
-                {/* Statistics Section */}
+                {/* Real Analytics Statistics Section */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <div className="text-center mb-8">
                         <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                            Estatísticas em Tempo Real
+                            Suas Estatísticas
                         </h2>
                         <p className="text-gray-600">
-                            Veja como nossa plataforma está ajudando milhares de usuários
+                            Acompanhe o desempenho dos seus links em tempo real
                         </p>
+                        {dashboardError && (
+                            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                <p className="text-sm text-yellow-700">
+                                    ⚠️ Não foi possível carregar algumas estatísticas. Tentando novamente...
+                                </p>
+                            </div>
+                        )}
                     </div>
 
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                        {stats.map((stat, index) => (
-                            <div key={index} className="bg-gray-50 rounded-xl p-6 text-center hover:bg-gray-100 transition-colors">
-                                <div className="flex items-center justify-center mb-4">
-                                    <div className="p-3 bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg text-purple-600">
-                                        {stat.icon}
-                                    </div>
-                                </div>
-                                <div className="text-2xl font-bold text-gray-900 mb-1">
-                                    {statsLoading ? (
-                                        <div className="animate-pulse bg-gray-200 h-6 w-16 mx-auto rounded"></div>
-                                    ) : (
-                                        formatNumber(stat.value) + stat.suffix
-                                    )}
-                                </div>
-                                <div className="text-sm text-gray-600">{stat.title}</div>
-                            </div>
+                    {/* Stats Grid using StatsCard component */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        {statsData.map((stat, index) => (
+                            <StatsCard
+                                key={index}
+                                title={stat.title}
+                                value={stat.isFloat ? stat.value : formatNumber(stat.value)}
+                                icon={stat.icon}
+                                loading={stat.loading}
+                                className="bg-gray-50 hover:bg-gray-100 transition-colors border-0"
+                            />
                         ))}
                     </div>
+
+                    {/* Top URLs Preview */}
+                    {topUrls && topUrls.urls && topUrls.urls.length > 0 && (
+                        <div className="border-t pt-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                    Top URLs por Cliques
+                                </h3>
+                                <button
+                                    onClick={() => handleNavigate('/analytics')}
+                                    className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+                                >
+                                    Ver todos →
+                                </button>
+                            </div>
+                            <div className="space-y-3">
+                                {topUrls.urls.slice(0, 3).map((url, index) => (
+                                    <div
+                                        key={url.id || index}
+                                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                                    >
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-gray-900 truncate">
+                                                {url.shortUrl || url.fullUrl|| 'URL'}
+                                            </p>
+                                            <p className="text-xs text-gray-500 truncate">
+                                                {url.shortUrl || url.fullUrl || url.title || 'URL original'}
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-sm font-bold text-purple-600">
+                                                {formatNumber(url.title || url.clickCount || 0)}
+                                            </p>
+                                            <p className="text-xs text-gray-500">cliques</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            {topUrlsLoading && (
+                                <div className="space-y-3">
+                                    {[...Array(3)].map((_, i) => (
+                                        <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg animate-pulse">
+                                            <div className="flex-1">
+                                                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                                            </div>
+                                            <div className="w-12 h-4 bg-gray-200 rounded"></div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
+
+                {/* Debug Info - Remove em produção */}
+                {process.env.NODE_ENV === 'development' && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <h4 className="text-sm font-medium text-yellow-800 mb-2">Debug Info - Analytics:</h4>
+                        <div className="text-xs text-yellow-700 space-y-1">
+                            <p><strong>Dashboard Stats:</strong> {JSON.stringify(dashboardStats, null, 2)}</p>
+                            <p><strong>Global Stats:</strong> {JSON.stringify(globalStats, null, 2)}</p>
+                            <p><strong>Top URLs Count:</strong> {topUrls?.urls?.length || 0}</p>
+                            <p><strong>Loading States:</strong> Dashboard: {dashboardLoading.toString()}, Global: {globalStatsLoading.toString()}, TopUrls: {topUrlsLoading.toString()}</p>
+                        </div>
+                        {createdUrl && (
+                            <div className="mt-4 pt-4 border-t border-yellow-300">
+                                <h5 className="text-sm font-medium text-yellow-800 mb-2">Created URL Debug:</h5>
+                                <pre className="text-xs text-yellow-700 overflow-auto">
+                                    {JSON.stringify(createdUrl, null, 2)}
+                                </pre>
+                                <div className="mt-2 text-xs text-yellow-700">
+                                    <p><strong>Short URL extraída:</strong> {getShortUrl()}</p>
+                                    <p><strong>Original URL extraída:</strong> {getOriginalUrl()}</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Quick Actions */}
                 <div className="grid md:grid-cols-2 gap-6">

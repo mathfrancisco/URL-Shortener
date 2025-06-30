@@ -1,17 +1,21 @@
 import React from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface StatsCardProps {
-    title: string,
-    value: string | number,
-    icon: React.ComponentType<{ className?: string }>,
+    title: string;
+    value: string | number;
+    icon: React.ComponentType<{ className?: string }>;
     change?: {
         value: number;
         type: 'increase' | 'decrease' | 'neutral';
-    },
-    description?: string,
-    variant?: 'small' | 'medium' | 'large',
-    className?: string,
-    loading?: boolean
+    };
+    description?: string;
+    variant?: 'small' | 'medium' | 'large';
+    className?: string;
+    loading?: boolean;
+    trend?: string;
+    trendValue?: number;
+    highlight?: boolean;
 }
 
 const StatsCard: React.FC<StatsCardProps> = ({
@@ -22,7 +26,10 @@ const StatsCard: React.FC<StatsCardProps> = ({
                                                  description,
                                                  variant = 'medium',
                                                  className = '',
-
+                                                 loading = false,
+                                                 trend,
+                                                 trendValue,
+                                                 highlight = false
                                              }) => {
     const getVariantClasses = () => {
         switch (variant) {
@@ -53,9 +60,34 @@ const StatsCard: React.FC<StatsCardProps> = ({
         return symbol;
     };
 
+    // Implementação do estado de carregamento
+    if (loading) {
+        return (
+            <div className={`bg-white rounded-xl border shadow-sm ${getVariantClasses()} ${className}`}>
+                <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                            <Skeleton className="h-9 w-9 rounded-lg" />
+                            {variant !== 'small' && <Skeleton className="h-4 w-24" />}
+                        </div>
+
+                        {variant === 'small' && <Skeleton className="h-4 w-16 mb-1" />}
+
+                        <Skeleton className="h-7 w-20 mt-1" />
+
+                        {description && <Skeleton className="h-4 w-32 mt-1" />}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Determinando classe de destaque
+    const bgColor = highlight ? 'bg-purple-50' : 'bg-white';
+    const borderColor = highlight ? 'border-purple-200' : 'border';
+
     return (
-        <div
-            className={`bg-white rounded-xl border shadow-sm hover:shadow-md transition-shadow ${getVariantClasses()} ${className}`}>
+        <div className={`${bgColor} rounded-xl ${borderColor} shadow-sm hover:shadow-md transition-shadow ${getVariantClasses()} ${className}`}>
             <div className="flex items-start justify-between">
                 <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
@@ -72,15 +104,20 @@ const StatsCard: React.FC<StatsCardProps> = ({
                     )}
 
                     <div className="flex items-baseline gap-2">
-            <span
-                className={`font-bold ${variant === 'large' ? 'text-3xl' : variant === 'small' ? 'text-xl' : 'text-2xl'} text-gray-900`}>
-              {typeof value === 'number' ? value.toLocaleString() : value}
-            </span>
+                        <span className={`font-bold ${variant === 'large' ? 'text-3xl' : variant === 'small' ? 'text-xl' : 'text-2xl'} text-gray-900`}>
+                            {typeof value === 'number' ? value.toLocaleString() : value}
+                        </span>
 
                         {change && (
                             <span className={`text-sm font-medium ${getChangeColor()}`}>
-                {getChangeIcon()} {Math.abs(change.value)}%
-              </span>
+                                {getChangeIcon()} {Math.abs(change.value)}%
+                            </span>
+                        )}
+
+                        {trend && trendValue !== undefined && (
+                            <span className={`text-sm font-medium ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                                {trend === 'up' ? '↗' : '↘'} {trendValue}
+                            </span>
                         )}
                     </div>
 

@@ -40,7 +40,10 @@ export default function App() {
                     {/* Private Routes */}
                     {/*<Route path="/dashboard" element={<PrivatePages.Dashboard />} />*/}
                     <Route path="/home" element={<PrivatePages.Home />} />
-                    {/* Rota corrigida com parâmetro urlId */}
+                    {/* Rota corrigida sem parâmetro urlId */}
+                    <Route path="/analytics" element={<PrivatePages.Analytics />} />
+                    {/* Detalhamento específico de URL - Nova rota */}
+                    <Route path="/analytics/:alias" element={<PrivatePages.Analytics />} />
                     <Route path="/analytics/:urlId" element={<PrivatePages.Analytics />} />
 
                     {/* 404 Route */}

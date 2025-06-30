@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { TopUrlsTable } from './TopUrlsTable';
 import StatsCard from "@/components/display/StatsCard.tsx";
 
+
 export function AnalyticsDashboard() {
     const { data: dashboardStats, isPending: isLoadingDashboard, error: dashboardError } = useDashboardStats();
     const { data: topUrls, isPending: isLoadingTopUrls, error: topUrlsError } = useTopUrls(10, 'clicks');
@@ -22,6 +23,9 @@ export function AnalyticsDashboard() {
             </Alert>
         );
     }
+
+    // Using TopUrl[] directly from TopUrlsData
+    const urlsForTable = topUrls?.urls || [];
 
     return (
         <div className="space-y-6">
@@ -76,7 +80,7 @@ export function AnalyticsDashboard() {
                             {isLoadingTopUrls ? (
                                 <TopUrlsSkeleton />
                             ) : (
-                                <TopUrlsTable urls={topUrls?.urls || []} />
+                                <TopUrlsTable urls={urlsForTable} />
                             )}
                         </CardContent>
                     </Card>
@@ -121,5 +125,8 @@ function RecentUrls() {
         return <TopUrlsSkeleton />;
     }
 
-    return <TopUrlsTable urls={recentUrls?.urls || []} />;
+    // Use TopUrl[] directly for recent URLs
+    const urlsForTable = recentUrls?.urls || [];
+
+    return <TopUrlsTable urls={urlsForTable} />;
 }

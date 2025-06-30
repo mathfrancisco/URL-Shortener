@@ -35,7 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             id: 'home',
             label: 'Dashboard',
             icon: Home,
-            path: '/',
+            path: '/home',
             badge: null
         },
         {

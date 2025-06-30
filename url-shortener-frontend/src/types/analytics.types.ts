@@ -1,4 +1,4 @@
-// src/types/analytics.ts
+// src/types/analytics.types.ts
 
 export interface DailyClickStats {
     date: string;
@@ -53,6 +53,8 @@ export interface TimelineData {
     data: TimelineDataPoint[];
     totalClicks: number;
     totalUniqueVisitors?: number;
+    granularity: 'daily' | 'hourly' | 'weekly';
+    days: number;
 }
 
 export interface StatsSummary {
@@ -84,13 +86,6 @@ export interface DeviceStats {
     browsers: Record<string, number>;
     topDevice?: string;
     topBrowser?: string;
-}
-
-export interface TimelineData {
-    timeline: Record<string, number>;
-    granularity: 'daily' | 'hourly' | 'weekly';
-    days: number;
-    totalClicks: number;
 }
 
 export interface DashboardStats {

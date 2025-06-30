@@ -152,7 +152,7 @@ export const useAnalyticsHealth = (options?: UseQueryOptions<AnalyticsHealth>) =
     });
 };
 
-// Combined hook for URL analytics overview
+// Combined hook for URL analytics overview - FIXED VERSION
 export const useUrlAnalyticsOverview = (urlId: string) => {
     const analytics = useUrlAnalytics(urlId);
     const summary = useUrlStatsSummary(urlId);

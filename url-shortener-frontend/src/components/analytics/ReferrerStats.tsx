@@ -2,6 +2,7 @@
 
 import { Loader2, Link } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import type { ReferrerStats as ReferrerStatsType } from "@/types/analytics.types";
 
 // Define the type for individual referrer items
 type ReferrerItem = {
@@ -9,15 +10,8 @@ type ReferrerItem = {
     count: number;
 };
 
-// Define the type for the complete referrer stats data structure
-type ReferrerStatsData = {
-    referrers: ReferrerItem[];
-    totalReferrers: number;
-    totalClicks: number;
-} | ReferrerItem[]; // Support both nested and flat array structures
-
 interface ReferrerStatsProps {
-    data?: ReferrerStatsData;
+    data?: ReferrerStatsType;
     loading?: boolean;
     compact?: boolean;
 }
@@ -31,15 +25,30 @@ export function ReferrerStats({ data, loading, compact = false }: ReferrerStatsP
         );
     }
 
-    // Handle different data structures
+    // Handle different data structures - adapt to your actual ReferrerStats type
     let referrerItems: ReferrerItem[] = [];
 
-    if (Array.isArray(data)) {
-        // If data is already an array of ReferrerItem
-        referrerItems = data;
-    } else if (data && 'referrers' in data) {
-        // If data is an object with referrers property
-        referrerItems = data.referrers;
+    if (data) {
+        // Check if data has the expected structure based on your analytics types
+        // You may need to adjust this based on your actual ReferrerStats type definition
+        if (Array.isArray(data)) {
+            // If data is already an array of ReferrerItem
+            referrerItems = data as ReferrerItem[];
+        } else if ('referrers' in data && Array.isArray(data.referrers)) {
+            // If data is an object with referrers property
+            referrerItems = data.referrers as ReferrerItem[];
+        } else if ('data' in data && Array.isArray(data.data)) {
+            // Alternative structure with data property
+            referrerItems = data.data as ReferrerItem[];
+        } else {
+            // Try to extract referrer data from other possible structures
+            // This is a fallback - adjust based on your actual data structure
+            const entries = Object.entries(data);
+            referrerItems = entries.map(([referrer, count]) => ({
+                referrer,
+                count: typeof count === 'number' ? count : 0
+            }));
+        }
     }
 
     if (referrerItems.length === 0) {
