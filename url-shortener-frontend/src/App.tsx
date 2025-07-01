@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom'
 
 // Lazy loading para otimização
 const PublicPages = {
@@ -12,9 +12,10 @@ const PublicPages = {
 }
 
 const PrivatePages = {
-    // Dashboard: lazy(() => import('./pages/private/Dashboard')),
     Home: lazy(() => import('./pages/private/Home')),
-    Analytics: lazy(() => import('./pages/private/Analytics')),
+    Analytics: lazy(() => import('./pages/private/Analytics')), // Dashboard geral apenas
+    UrlDetails: lazy(() => import('./pages/private/UrlDetails')),
+    Urls: lazy(() => import('./pages/private/Urls'))
 }
 
 // Loading component
@@ -24,12 +25,25 @@ const LoadingSpinner = () => (
     </div>
 )
 
+// Componente para redirecionamento de rotas antigas
+const AnalyticsRedirect = () => {
+    const { urlId, alias } = useParams()
+    const identifier = urlId || alias
+
+    if (identifier) {
+        return <Navigate to={`/urls/${identifier}`} replace />
+    }
+
+    // Se não tem parâmetro, vai para analytics geral
+    return <Navigate to="/analytics" replace />
+}
+
 export default function App() {
     return (
         <Router>
             <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
-                    {/* Public Routes */}
+                    {/* ========== PUBLIC ROUTES ========== */}
                     <Route path="/" element={<PublicPages.Home />} />
                     <Route path="/login" element={<PublicPages.Login />} />
                     <Route path="/register" element={<PublicPages.Register />} />
@@ -37,27 +51,57 @@ export default function App() {
                     <Route path="/resend-verification" element={<PublicPages.ResendVerification />} />
                     <Route path="/email-sent" element={<PublicPages.EmailSent />} />
 
-                    {/* Private Routes */}
-                    {/*<Route path="/dashboard" element={<PrivatePages.Dashboard />} />*/}
-                    <Route path="/home" element={<PrivatePages.Home />} />
-                    {/* Rota corrigida sem parâmetro urlId */}
-                    <Route path="/analytics" element={<PrivatePages.Analytics />} />
-                    {/* Detalhamento específico de URL - Nova rota */}
-                    <Route path="/analytics/:alias" element={<PrivatePages.Analytics />} />
-                    <Route path="/analytics/:urlId" element={<PrivatePages.Analytics />} />
+                    {/* ========== PRIVATE ROUTES ========== */}
 
-                    {/* 404 Route */}
+                    {/* Home/Dashboard */}
+                    <Route path="/home" element={<PrivatePages.Home />} />
+
+                    {/* Analytics Dashboard Geral - SEM parâmetros */}
+                    <Route path="/analytics" element={<PrivatePages.Analytics />} />
+
+                    {/* URLs Management */}
+                    <Route path="/urls" element={<PrivatePages.Urls />} /> {/* Lista de URLs - pode usar Home ou criar página dedicada */}
+
+                    {/* Detalhes Específicos da URL - NOVA ESTRUTURA */}
+                    <Route path="/urls/:urlId" element={<PrivatePages.UrlDetails />} />
+
+                    {/* ========== COMPATIBILITY ROUTES (Redirecionamento) ========== */}
+                    {/* Redireciona rotas antigas para nova estrutura */}
+                    <Route
+                        path="/analytics/:urlId"
+                        element={<AnalyticsRedirect />}
+                    />
+                    <Route
+                        path="/analytics/:alias"
+                        element={<AnalyticsRedirect />}
+                    />
+
+                    {/* ========== 404 ROUTE ========== */}
                     <Route path="*" element={
                         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
                             <div className="text-center">
                                 <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
                                 <p className="text-xl text-gray-600 mb-8">Página não encontrada</p>
-                                <a
-                                    href="/"
-                                    className="bg-blue-600 px-6 py-3 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                >
-                                    Voltar ao início
-                                </a>
+                                <div className="space-y-4">
+                                    <div>
+                                        <a
+                                            href="/home"
+                                            className="bg-blue-600 px-6 py-3 text-white rounded-lg hover:bg-blue-700 transition-colors mr-4"
+                                        >
+                                            Ir para Home
+                                        </a>
+                                        <a
+                                            href="/analytics"
+                                            className="bg-gray-600 px-6 py-3 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                                        >
+                                            Ver Analytics
+                                        </a>
+                                    </div>
+                                    <p className="text-sm text-gray-500 mt-4">
+                                        Se você estava tentando acessar analytics de uma URL específica,<br />
+                                        acesse através da lista de URLs em /home
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     } />

@@ -1,7 +1,15 @@
 // src/components/analytics/TopUrlsTable.tsx
-
-import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
+import {
+    ExternalLink,
+    BarChart3,
+    Calendar,
+    MousePointer,
+    Copy,
+    Eye
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
     Table,
     TableBody,
@@ -10,75 +18,86 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { ExternalLink, Copy, BarChart3 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
-
-interface UrlData {
-    id: string;
-    shortUrl: string;
-    originalUrl: string;
-    title?: string;
-    clicks: number;
-    createdAt: string;
-    isActive: boolean;
-}
+import { useCopyToClipboard } from '@/hooks/useUrls';
+import type { TopUrl } from '@/types/analytics.types';
 
 interface TopUrlsTableProps {
-    urls: UrlData[];
-    showActions?: boolean;
+    urls: TopUrl[];
+    loading?: boolean;
 }
 
-export function TopUrlsTable({ urls, showActions = true }: TopUrlsTableProps) {
+export function TopUrlsTable({ urls, loading }: TopUrlsTableProps) {
     const navigate = useNavigate();
+    const { copyToClipboard } = useCopyToClipboard();
 
-    const copyToClipboard = async (text: string) => {
-        try {
-            await navigator.clipboard.writeText(text);
-            toast.success('URL copiada para a área de transferência');
-        } catch (error) {
-            toast.error('Erro ao copiar URL');
-        }
+    const handleViewDetails = (urlId: string) => {
+        navigate(`/urls/${urlId}`);
     };
 
     const handleViewAnalytics = (urlId: string) => {
-        navigate(`/analytics/${urlId}`);
+        navigate(`/urls/${urlId}?tab=detailed`);
     };
 
-    // Função para formatar números de forma segura
-    const formatNumber = (value: number | undefined | null): string => {
-        if (value === undefined || value === null || isNaN(value)) {
-            return '0';
-        }
-        return value.toLocaleString();
+    const handleCopyUrl = async (e: React.MouseEvent, shortUrl: string) => {
+        e.stopPropagation();
+        await copyToClipboard(shortUrl);
     };
 
-    // Função para formatar data de forma segura
-    const formatDate = (dateString: string | undefined | null): string => {
-        if (!dateString) {
-            return 'Data não disponível';
-        }
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    };
 
+    const getDomain = (url: string) => {
         try {
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) {
-                return 'Data inválida';
-            }
-            return formatDistanceToNow(date, {
-                addSuffix: true,
-                locale: ptBR
-            });
-        } catch (error) {
-            return 'Data inválida';
+            const domain = new URL(url).hostname;
+            return domain.replace('www.', '');
+        } catch {
+            return url;
         }
     };
+
+    if (loading) {
+        return (
+            <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                        <div className="flex items-center space-x-4 p-4 border rounded-lg">
+                            <div className="h-10 w-10 bg-gray-200 rounded"></div>
+                            <div className="flex-1 space-y-2">
+                                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                            </div>
+                            <div className="space-y-2">
+                                <div className="h-4 bg-gray-200 rounded w-16"></div>
+                                <div className="h-3 bg-gray-200 rounded w-12"></div>
+                            </div>
+                            <div className="flex space-x-2">
+                                <div className="h-8 w-8 bg-gray-200 rounded"></div>
+                                <div className="h-8 w-8 bg-gray-200 rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+    }
 
     if (!urls || urls.length === 0) {
         return (
             <div className="text-center py-8">
-                <p className="text-muted-foreground">Nenhuma URL encontrada</p>
+                <div className="space-y-3">
+                    <BarChart3 className="h-12 w-12 text-gray-400 mx-auto" />
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                        Nenhuma URL encontrada
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400">
+                        Comece criando sua primeira URL encurtada.
+                    </p>
+                </div>
             </div>
         );
     }
@@ -89,95 +108,105 @@ export function TopUrlsTable({ urls, showActions = true }: TopUrlsTableProps) {
                 <TableHeader>
                     <TableRow>
                         <TableHead>URL</TableHead>
-                        <TableHead>Destino</TableHead>
-                        <TableHead className="text-center">Cliques</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Criado</TableHead>
-                        {showActions && <TableHead className="text-right">Ações</TableHead>}
+                        <TableHead>Título</TableHead>
+                        <TableHead className="text-center">
+                            <MousePointer className="h-4 w-4 mx-auto" />
+                        </TableHead>
+                        <TableHead className="text-center">
+                            <Calendar className="h-4 w-4 mx-auto" />
+                        </TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {urls.map((url) => {
-                        // Validação adicional para cada URL
-                        if (!url || !url.id) {
-                            return null;
-                        }
+                    {urls.map((url) => (
+                        <TableRow
+                            key={url.id}
+                            className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                            onClick={() => handleViewDetails(url.id)}
+                        >
+                            <TableCell className="max-w-0">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <a
+                                            href={url.shortUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="text-blue-600 hover:text-blue-800 hover:underline font-medium text-sm flex items-center gap-1"
+                                        >
+                                            {url.shortUrl.replace(/^https?:\/\//, '')}
+                                            <ExternalLink className="h-3 w-3" />
+                                        </a>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={(e) => handleCopyUrl(e, url.shortUrl)}
+                                            className="h-6 w-6 p-0"
+                                        >
+                                            <Copy className="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                    <div className="text-xs text-gray-500 truncate max-w-96">
+                                        {getDomain(url.fullUrl)}
+                                    </div>
+                                </div>
+                            </TableCell>
 
-                        return (
-                            <TableRow key={url.id}>
-                                <TableCell>
-                                    <div className="flex items-center space-x-2">
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium truncate">
-                                                {url.title || url.shortUrl || 'URL sem título'}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground truncate">
-                                                {url.shortUrl || 'URL não disponível'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <div className="flex items-center space-x-2 max-w-xs">
-                                        <span className="text-sm truncate" title={url.originalUrl || ''}>
-                                            {url.originalUrl || 'URL de destino não disponível'}
+                            <TableCell className="max-w-48">
+                                <div className="truncate">
+                                    {url.title ? (
+                                        <span className="text-sm font-medium">{url.title}</span>
+                                    ) : (
+                                        <span className="text-sm text-gray-400 italic">
+                                            Sem título
                                         </span>
-                                        {url.originalUrl && (
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => window.open(url.originalUrl, '_blank')}
-                                                className="h-6 w-6 p-0 flex-shrink-0"
-                                            >
-                                                <ExternalLink className="h-3 w-3" />
-                                            </Button>
-                                        )}
-                                    </div>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                    <Badge variant="secondary" className="font-mono">
-                                        {formatNumber(url.clicks)}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge
-                                        variant={url.isActive ? "default" : "secondary"}
-                                        className={url.isActive ? "bg-green-100 text-green-800" : ""}
-                                    >
-                                        {url.isActive ? 'Ativo' : 'Inativo'}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-sm text-muted-foreground">
+                                    )}
+                                </div>
+                            </TableCell>
+
+                            <TableCell className="text-center">
+                                <Badge variant="secondary" className="font-mono text-xs">
+                                    {url.clickCount.toLocaleString()}
+                                </Badge>
+                            </TableCell>
+
+                            <TableCell className="text-center">
+                                <span className="text-xs text-gray-500">
                                     {formatDate(url.createdAt)}
-                                </TableCell>
-                                {showActions && (
-                                    <TableCell className="text-right">
-                                        <div className="flex items-center justify-end space-x-1">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => copyToClipboard(url.shortUrl || '')}
-                                                className="h-8 w-8 p-0"
-                                                title="Copiar URL"
-                                                disabled={!url.shortUrl}
-                                            >
-                                                <Copy className="h-3 w-3" />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleViewAnalytics(url.id)}
-                                                className="h-8 w-8 p-0"
-                                                title="Ver Analytics"
-                                            >
-                                                <BarChart3 className="h-3 w-3" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                )}
-                            </TableRow>
-                        );
-                    })}
+                                </span>
+                            </TableCell>
+
+                            <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleViewDetails(url.id);
+                                        }}
+                                        className="h-8 w-8 p-0"
+                                        title="Ver detalhes"
+                                    >
+                                        <Eye className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleViewAnalytics(url.id);
+                                        }}
+                                        className="h-8 w-8 p-0"
+                                        title="Ver analytics"
+                                    >
+                                        <BarChart3 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    ))}
                 </TableBody>
             </Table>
         </div>

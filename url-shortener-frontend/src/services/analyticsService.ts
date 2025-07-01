@@ -1,21 +1,25 @@
-// src/services/analyticsService.ts
+// src/services/analyticsService.ts - Simplificado para funcionar com seu backend
 
 import type {
     AnalyticsHealth,
-    ClicksData, DashboardStats, DeviceStats,
-    ExportData, GeographicStats,
+    ClicksData,
+    DashboardStats,
+    DeviceStats,
+    ExportData,
+    GeographicStats,
     ReferrerStats,
     StatsSummary,
-    TimelineData, TopUrlsData,
+    TimelineData,
+    TopUrlsData,
     UrlAnalyticsResponse
 } from '@/types/analytics.types';
-import { api } from '@/services/api'; // Usar a mesma instância configurada
+import { api } from '@/services/api';
 
-const ANALYTICS_BASE = '/api/analytics'; // Corrigido: adicionado /api
+const ANALYTICS_BASE = '/api/analytics';
 
 class AnalyticsService {
     // Get complete analytics for a URL
-    async getUrlAnalytics(urlId: string): Promise<UrlAnalyticsResponse> {
+    async getUrlAnalytics(urlId: string, isAlias: boolean = false): Promise<UrlAnalyticsResponse> {
         try {
             const response = await api.get<UrlAnalyticsResponse>(`${ANALYTICS_BASE}/url/${urlId}`);
             return response.data;
@@ -33,7 +37,8 @@ class AnalyticsService {
             endDate?: string;
             page?: number;
             size?: number;
-        }
+        },
+        isAlias: boolean = false
     ): Promise<ClicksData> {
         try {
             const params = new URLSearchParams();
@@ -43,7 +48,11 @@ class AnalyticsService {
             if (options?.page !== undefined) params.append('page', options.page.toString());
             if (options?.size !== undefined) params.append('size', options.size.toString());
 
-            const response = await api.get<ClicksData>(`${ANALYTICS_BASE}/url/${urlId}/clicks?${params}`);
+            const url = `${ANALYTICS_BASE}/url/${urlId}/clicks`;
+            const queryString = params.toString();
+            const fullUrl = queryString ? `${url}?${queryString}` : url;
+
+            const response = await api.get<ClicksData>(fullUrl);
             return response.data;
         } catch (error) {
             console.error('Error fetching URL clicks:', error);
@@ -52,7 +61,7 @@ class AnalyticsService {
     }
 
     // Get stats summary for a URL
-    async getUrlStatsSummary(urlId: string): Promise<StatsSummary> {
+    async getUrlStatsSummary(urlId: string, isAlias: boolean = false): Promise<StatsSummary> {
         try {
             const response = await api.get<StatsSummary>(`${ANALYTICS_BASE}/url/${urlId}/stats/summary`);
             return response.data;
@@ -63,7 +72,7 @@ class AnalyticsService {
     }
 
     // Get geographic statistics
-    async getGeographicStats(urlId: string): Promise<GeographicStats> {
+    async getGeographicStats(urlId: string, isAlias: boolean = false): Promise<GeographicStats> {
         try {
             const response = await api.get<GeographicStats>(`${ANALYTICS_BASE}/url/${urlId}/stats/geographic`);
             return response.data;
@@ -74,7 +83,7 @@ class AnalyticsService {
     }
 
     // Get referrer statistics
-    async getReferrerStats(urlId: string): Promise<ReferrerStats> {
+    async getReferrerStats(urlId: string, isAlias: boolean = false): Promise<ReferrerStats> {
         try {
             const response = await api.get<ReferrerStats>(`${ANALYTICS_BASE}/url/${urlId}/stats/referrers`);
             return response.data;
@@ -85,7 +94,7 @@ class AnalyticsService {
     }
 
     // Get device and browser statistics
-    async getDeviceStats(urlId: string): Promise<DeviceStats> {
+    async getDeviceStats(urlId: string, isAlias: boolean = false): Promise<DeviceStats> {
         try {
             const response = await api.get<DeviceStats>(`${ANALYTICS_BASE}/url/${urlId}/stats/devices`);
             return response.data;
@@ -99,7 +108,8 @@ class AnalyticsService {
     async getClickTimeline(
         urlId: string,
         granularity: 'daily' | 'hourly' | 'weekly' = 'daily',
-        days: number = 30
+        days: number = 30,
+        isAlias: boolean = false
     ): Promise<TimelineData> {
         try {
             const response = await api.get<TimelineData>(
@@ -142,7 +152,8 @@ class AnalyticsService {
     // Export analytics data
     async exportAnalytics(
         urlId: string,
-        format: 'json' | 'csv' = 'json'
+        format: 'json' | 'csv' = 'json',
+        isAlias: boolean = false
     ): Promise<ExportData> {
         try {
             const response = await api.get<ExportData>(
@@ -159,10 +170,11 @@ class AnalyticsService {
     async downloadExport(
         urlId: string,
         format: 'json' | 'csv' = 'json',
-        filename?: string
+        filename?: string,
+        isAlias: boolean = false
     ): Promise<void> {
         try {
-            const exportData = await this.exportAnalytics(urlId, format);
+            const exportData = await this.exportAnalytics(urlId, format, isAlias);
 
             const blob = new Blob([
                 format === 'csv' ? exportData.data : JSON.stringify(exportData.data, null, 2)
@@ -206,7 +218,7 @@ class AnalyticsService {
                 case 403:
                     return new Error('Access denied. You are not authorized to view this URL analytics.');
                 case 404:
-                    return new Error('URL not found. Please check the URL ID.');
+                    return new Error('URL not found. Please check the URL ID or alias.');
                 case 500:
                     return new Error('Server error. Please try again later.');
                 default:
@@ -220,17 +232,53 @@ class AnalyticsService {
     }
 
     // Utility method to check if user can access URL analytics
-    async canAccessUrlAnalytics(urlId: string): Promise<boolean> {
+    async canAccessUrlAnalytics(urlId: string, isAlias: boolean = false): Promise<boolean> {
         try {
-            await this.getUrlStatsSummary(urlId);
+            await this.getUrlStatsSummary(urlId, isAlias);
             return true;
-        } catch (error) {
+        } catch (error: any) {
             if (error.message?.includes('Access denied') || error.message?.includes('Unauthorized')) {
                 return false;
             }
             throw error;
         }
     }
+
+    // Helper method to validate if string is UUID vs alias
+    static isValidUUID(str: string): boolean {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(str);
+    }
+
+    // Helper method to auto-detect if identifier is alias or ID
+    static detectIdentifierType(identifier: string): { isAlias: boolean; cleanId: string } {
+        const cleanId = identifier.trim();
+        const isAlias = !this.isValidUUID(cleanId);
+        return {
+            isAlias,
+            cleanId
+        };
+    }
+
+    // Method to get analytics with auto-detection of alias vs ID
+    async getUrlAnalyticsAutoDetect(identifier: string): Promise<UrlAnalyticsResponse> {
+        const { cleanId } = AnalyticsService.detectIdentifierType(identifier);
+        // Como seu backend aceita tanto alias quanto ID na mesma rota,
+        // não precisamos distinguir
+        return this.getUrlAnalytics(cleanId, false);
+    }
+
+    // Method to get stats summary with auto-detection
+    async getUrlStatsSummaryAutoDetect(identifier: string): Promise<StatsSummary> {
+        const { cleanId } = AnalyticsService.detectIdentifierType(identifier);
+        return this.getUrlStatsSummary(cleanId, false);
+    }
 }
 
 export const analyticsService = new AnalyticsService();
+export default analyticsService;
+
+export function isAnalyticsError(error: any): error is { message: string; status?: number } {
+    return error && typeof error.message === 'string';
+}
+

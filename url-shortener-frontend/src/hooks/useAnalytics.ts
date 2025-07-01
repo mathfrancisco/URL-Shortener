@@ -1,4 +1,4 @@
-// src/hooks/useAnalytics.ts
+// src/hooks/useAnalytics.ts - Atualização para suportar alias
 
 import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
 import { analyticsService } from '../services/analyticsService';
@@ -14,11 +14,12 @@ import type {
 // Get complete URL analytics
 export const useUrlAnalytics = (
     urlId: string,
+    isAlias: boolean = false,
     options?: UseQueryOptions<UrlAnalyticsResponse>
 ) => {
     return useQuery({
-        queryKey: ['analytics', urlId],
-        queryFn: () => analyticsService.getUrlAnalytics(urlId),
+        queryKey: ['analytics', urlId, isAlias],
+        queryFn: () => analyticsService.getUrlAnalytics(urlId, isAlias),
         enabled: !!urlId,
         staleTime: 5 * 60 * 1000, // 5 minutes
         ...options,
@@ -34,11 +35,12 @@ export const useUrlClicks = (
         page?: number;
         size?: number;
     },
+    isAlias: boolean = false,
     options?: UseQueryOptions<ClicksData>
 ) => {
     return useQuery({
-        queryKey: ['analytics', urlId, 'clicks', filters],
-        queryFn: () => analyticsService.getUrlClicks(urlId, filters),
+        queryKey: ['analytics', urlId, 'clicks', filters, isAlias],
+        queryFn: () => analyticsService.getUrlClicks(urlId, filters, isAlias),
         enabled: !!urlId,
         staleTime: 2 * 60 * 1000, // 2 minutos
         ...options,
@@ -48,11 +50,12 @@ export const useUrlClicks = (
 // Get URL stats summary
 export const useUrlStatsSummary = (
     urlId: string,
+    isAlias: boolean = false,
     options?: UseQueryOptions<StatsSummary>
 ) => {
     return useQuery({
-        queryKey: ['analytics', urlId, 'summary'],
-        queryFn: () => analyticsService.getUrlStatsSummary(urlId),
+        queryKey: ['analytics', urlId, 'summary', isAlias],
+        queryFn: () => analyticsService.getUrlStatsSummary(urlId, isAlias),
         enabled: !!urlId,
         staleTime: 5 * 60 * 1000,
         ...options,
@@ -62,11 +65,12 @@ export const useUrlStatsSummary = (
 // Get geographic statistics
 export const useGeographicStats = (
     urlId: string,
+    isAlias: boolean = false,
     options?: UseQueryOptions<GeographicStats>
 ) => {
     return useQuery({
-        queryKey: ['analytics', urlId, 'geographic'],
-        queryFn: () => analyticsService.getGeographicStats(urlId),
+        queryKey: ['analytics', urlId, 'geographic', isAlias],
+        queryFn: () => analyticsService.getGeographicStats(urlId, isAlias),
         enabled: !!urlId,
         staleTime: 10 * 60 * 1000, // 10 minutes
         ...options,
@@ -76,11 +80,12 @@ export const useGeographicStats = (
 // Get referrer statistics
 export const useReferrerStats = (
     urlId: string,
+    isAlias: boolean = false,
     options?: UseQueryOptions<ReferrerStats>
 ) => {
     return useQuery({
-        queryKey: ['analytics', urlId, 'referrers'],
-        queryFn: () => analyticsService.getReferrerStats(urlId),
+        queryKey: ['analytics', urlId, 'referrers', isAlias],
+        queryFn: () => analyticsService.getReferrerStats(urlId, isAlias),
         enabled: !!urlId,
         staleTime: 10 * 60 * 1000,
         ...options,
@@ -90,11 +95,12 @@ export const useReferrerStats = (
 // Get device statistics
 export const useDeviceStats = (
     urlId: string,
+    isAlias: boolean = false,
     options?: UseQueryOptions<DeviceStats>
 ) => {
     return useQuery({
-        queryKey: ['analytics', urlId, 'devices'],
-        queryFn: () => analyticsService.getDeviceStats(urlId),
+        queryKey: ['analytics', urlId, 'devices', isAlias],
+        queryFn: () => analyticsService.getDeviceStats(urlId, isAlias),
         enabled: !!urlId,
         staleTime: 10 * 60 * 1000,
         ...options,
@@ -106,11 +112,12 @@ export const useClickTimeline = (
     urlId: string,
     granularity: 'daily' | 'hourly' | 'weekly' = 'daily',
     days: number = 30,
+    isAlias: boolean = false,
     options?: UseQueryOptions<TimelineData>
 ) => {
     return useQuery({
-        queryKey: ['analytics', urlId, 'timeline', granularity, days],
-        queryFn: () => analyticsService.getClickTimeline(urlId, granularity, days),
+        queryKey: ['analytics', urlId, 'timeline', granularity, days, isAlias],
+        queryFn: () => analyticsService.getClickTimeline(urlId, granularity, days, isAlias),
         enabled: !!urlId,
         staleTime: 5 * 60 * 1000,
         ...options,
@@ -152,14 +159,14 @@ export const useAnalyticsHealth = (options?: UseQueryOptions<AnalyticsHealth>) =
     });
 };
 
-// Combined hook for URL analytics overview - FIXED VERSION
-export const useUrlAnalyticsOverview = (urlId: string) => {
-    const analytics = useUrlAnalytics(urlId);
-    const summary = useUrlStatsSummary(urlId);
-    const geographic = useGeographicStats(urlId);
-    const referrers = useReferrerStats(urlId);
-    const devices = useDeviceStats(urlId);
-    const timeline = useClickTimeline(urlId, 'daily', 30);
+// Combined hook for URL analytics overview - UPDATED VERSION with alias support
+export const useUrlAnalyticsOverview = (urlId: string, isAlias: boolean = false) => {
+    const analytics = useUrlAnalytics(urlId, isAlias);
+    const summary = useUrlStatsSummary(urlId, isAlias);
+    const geographic = useGeographicStats(urlId, isAlias);
+    const referrers = useReferrerStats(urlId, isAlias);
+    const devices = useDeviceStats(urlId, isAlias);
+    const timeline = useClickTimeline(urlId, 'daily', 30, isAlias);
 
     return {
         analytics,
