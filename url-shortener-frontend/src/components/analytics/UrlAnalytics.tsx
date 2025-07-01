@@ -201,9 +201,9 @@ export function UrlAnalytics({ urlId, isAlias = false }: UrlAnalyticsProps) {
                             <div className="text-sm text-gray-500">
                                 {isAlias ? `Alias: ${urlId}` : `ID: ${urlId}`}
                             </div>
-                            {analytics.data.realId && isAlias && (
+                            {analytics.data. fullUrl && isAlias && (
                                 <div className="text-xs text-gray-400">
-                                    ID Real: {analytics.data.realId}
+                                    ID Real: {analytics.data. fullUrl}
                                 </div>
                             )}
                         </div>
@@ -221,7 +221,7 @@ export function UrlAnalytics({ urlId, isAlias = false }: UrlAnalyticsProps) {
                         Atualizar
                     </Button>
                     <ExportButton
-                        urlId={analytics.data?.realId || urlId}
+                        urlId={analytics.data?. fullUrl || urlId}
                         isAlias={isAlias}
                     />
                 </div>

@@ -1,15 +1,16 @@
 // src/components/analytics/ExportButton.tsx
 
-import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
-import { useState } from 'react';
+import {Button} from '@/components/ui/button';
+import {Download} from 'lucide-react';
+import {useState} from 'react';
 import axios from 'axios';
 
 interface ExportButtonProps {
-    urlId: string;
+    urlId: string,
+    isAlias?: boolean | undefined
 }
 
-export function ExportButton({ urlId }: ExportButtonProps) {
+export function ExportButton({urlId, isAlias}: ExportButtonProps) {
     const [loading, setLoading] = useState(false);
 
     const handleExport = async () => {
@@ -34,7 +35,7 @@ export function ExportButton({ urlId }: ExportButtonProps) {
 
     return (
         <Button onClick={handleExport} disabled={loading} variant="outline">
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4 mr-2"/>
             {loading ? 'Exportando...' : 'Exportar CSV'}
         </Button>
     );
