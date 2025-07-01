@@ -16,9 +16,13 @@ public interface UserRepository extends MongoRepository<UserEntity, String> {
 
     Optional<UserEntity> findByEmail(String email);
 
-    Optional<UserEntity> findByUsernameOrEmail(String username, String email);
+    // CORREÇÃO: Use uma query personalizada com $or para buscar por username OU email
+    @Query("{'$or': [{'username': ?0}, {'email': ?0}]}")
+    Optional<UserEntity> findByUsernameOrEmail(String usernameOrEmail);
 
-    Optional<UserEntity> findByEmailVerificationToken(String token);
+    // Ou você pode usar este método alternativo mais explícito:
+    // @Query("{'$or': [{'username': ?0}, {'email': ?1}]}")
+    // Optional<UserEntity> findByUsernameOrEmail(String username, String email);
 
     Optional<UserEntity> findByPasswordResetToken(String token);
 
@@ -47,4 +51,6 @@ public interface UserRepository extends MongoRepository<UserEntity, String> {
     long countByEmailVerifiedTrue();
 
     long countByPlanType(String planType);
+
+    Optional<UserEntity> findByEmailVerificationToken(String emailVerificationToken);
 }

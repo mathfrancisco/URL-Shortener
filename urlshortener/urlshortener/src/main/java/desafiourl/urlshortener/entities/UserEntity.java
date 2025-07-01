@@ -13,43 +13,81 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
-@Setter
-@Getter
 @Document(collection = "users")
 public class UserEntity implements UserDetails {
 
     @Id
+    @Getter @Setter
     private String id;
 
     @Indexed(unique = true)
+    @Getter @Setter
     private String email;
 
     @Indexed(unique = true)
+    @Getter @Setter
     private String username;
 
+    @Setter
     private String password;
+
+    @Getter @Setter
     private String firstName;
+
+    @Getter @Setter
     private String lastName;
+
+    @Getter @Setter
     private String phoneNumber;
+
+    @Getter @Setter
     private boolean emailVerified;
+
+    @Getter @Setter
     private boolean active;
+
+    @Getter @Setter
     private LocalDateTime createdAt;
+
+    @Getter @Setter
     private LocalDateTime lastLoginAt;
+
+    @Getter @Setter
     private String creatorIp;
+
+    @Getter @Setter
     private List<String> roles;
 
     // Subscription/Plan fields
+    @Getter @Setter
     private String planType; // FREE, PREMIUM, ENTERPRISE
+
+    @Getter @Setter
     private LocalDateTime planExpiresAt;
+
+    @Getter @Setter
     private int monthlyUrlLimit;
+
+    @Getter @Setter
     private int currentMonthUrlCount;
+
+    @Getter @Setter
     private LocalDateTime monthlyCountResetDate;
 
     // Security fields
+    @Getter @Setter
     private String emailVerificationToken;
+
+    @Getter @Setter
     private String passwordResetToken;
+
+    @Getter @Setter
     private LocalDateTime passwordResetTokenExpiry;
+
+    @Getter @Setter
     private int failedLoginAttempts;
+
+    @Getter @Setter
     private LocalDateTime lockoutUntil;
 
     public UserEntity() {
@@ -73,7 +111,7 @@ public class UserEntity implements UserDetails {
         this.lastName = lastName;
     }
 
-    // UserDetails implementation
+    // UserDetails implementation - these methods override Lombok's generated methods
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
@@ -157,5 +195,11 @@ public class UserEntity implements UserDetails {
 
     public boolean isSubscriptionActive() {
         return planExpiresAt == null || planExpiresAt.isAfter(LocalDateTime.now());
+    }
+
+    public void setEmailVerifiedAt(LocalDateTime now) {
+        this.emailVerified = true;
+        this.emailVerificationToken = null; // Clear token after verification
+        this.lastLoginAt = now; // Update last login time
     }
 }

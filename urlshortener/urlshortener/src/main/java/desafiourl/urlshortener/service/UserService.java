@@ -13,13 +13,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -57,16 +55,21 @@ public class UserService {
         }
 
         // Criar novo usuário
-        UserEntity user = new UserEntity(
-                request.email(),
-                request.username(),
-                passwordEncoder.encode(request.password()),
-                request.firstName(),
-                request.lastName()
-        );
+        UserEntity user = new UserEntity();
+        user.setUsername(request.username());
+        user.setEmail(request.email());
+        user.setFirstName(request.firstName());
+        user.setLastName(request.lastName());
+        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setPlanType("FREE");
+        user.setEmailVerified(false);
+        user.setActive(true);
+        user.setRoles(List.of("USER"));
+        user.setCreatedAt(LocalDateTime.now());
 
-        user.setPhoneNumber(request.phoneNumber());
-        user.setEmailVerificationToken(generateVerificationToken());
+        // GERAR TOKEN DE VERIFICAÇÃO DE EMAIL (NÃO JWT!)
+        String emailVerificationToken = generateEmailVerificationToken();
+        user.setEmailVerificationToken(emailVerificationToken);
 
         // Salvar usuário
         user = userRepository.save(user);
@@ -80,11 +83,11 @@ public class UserService {
             log.error("Erro ao enviar email de verificação para {}: {}", user.getEmail(), e.getMessage());
         }
 
-        // Gerar token JWT
-        String token = jwtUtils.generateTokenFromUser(user);
+        // Gerar JWT para resposta de autenticação
+        String jwtToken = jwtUtils.generateTokenFromUser(user);
 
         return new AuthResponse(
-                token,
+                jwtToken,
                 "Bearer",
                 user.getUsername(),
                 user.getEmail(),
@@ -99,30 +102,40 @@ public class UserService {
         log.info("Tentativa de login para: {}", request.usernameOrEmail());
 
         try {
-            // Buscar usuário por username ou email
-            Optional<UserEntity> userOpt = userRepository.findByUsernameOrEmail(
-                    request.usernameOrEmail(),
-                    request.usernameOrEmail()
-            );
+            // Buscar o usuário primeiro
+            Optional<UserEntity> userOpt = userRepository.findByUsernameOrEmail(request.usernameOrEmail());
 
             if (userOpt.isEmpty()) {
+                log.warn("Usuário não encontrado: {}", request.usernameOrEmail());
                 throw new BadCredentialsException("Credenciais inválidas");
             }
 
             UserEntity user = userOpt.get();
+            log.debug("Usuário encontrado: {} - Ativo: {} - Email verificado: {}",
+                    user.getUsername(), user.isActive(), user.isEmailVerified());
 
             // Verificar se conta não está bloqueada
             if (!user.isAccountNonLocked()) {
+                log.warn("Conta bloqueada: {}", user.getUsername());
                 throw new DisabledException("Conta temporariamente bloqueada devido a múltiplas tentativas de login");
             }
 
-            // Tentar autenticar
+            // Verificar se a conta está ativa
+            if (!user.isActive()) {
+                log.warn("Conta inativa: {}", user.getUsername());
+                throw new DisabledException("Conta desativada");
+            }
+
+            // Usar o AuthenticationManager para autenticar
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            user.getUsername(),
+                            request.usernameOrEmail(),
                             request.password()
                     )
             );
+
+            // Se chegou até aqui, a autenticação foi bem-sucedida
+            log.info("Autenticação bem-sucedida para: {}", user.getUsername());
 
             // Reset failed attempts on successful login
             user.resetFailedLoginAttempts();
@@ -145,42 +158,68 @@ public class UserService {
                     jwtUtils.getExpirationTime()
             );
 
-        } catch (AuthenticationException e) {
-            // Increment failed attempts
-            userRepository.findByUsernameOrEmail(request.usernameOrEmail(), request.usernameOrEmail())
-                    .ifPresent(user -> {
-                        user.incrementFailedLoginAttempts();
-                        userRepository.save(user);
-                    });
+        } catch (BadCredentialsException e) {
+            // Incrementar tentativas falhadas apenas para credenciais inválidas
+            try {
+                Optional<UserEntity> userOpt = userRepository.findByUsernameOrEmail(request.usernameOrEmail());
+                if (userOpt.isPresent()) {
+                    UserEntity user = userOpt.get();
+                    user.incrementFailedLoginAttempts();
+                    userRepository.save(user);
+                    log.warn("Tentativa de login falhada para usuário: {} - Tentativas: {}",
+                            user.getUsername(), user.getFailedLoginAttempts());
+                }
+            } catch (Exception ex) {
+                log.error("Erro ao incrementar tentativas de login falhadas: {}", ex.getMessage());
+            }
 
-            log.error("Falha no login para {}: {}", request.usernameOrEmail(), e.getMessage());
+            log.error("Credenciais inválidas para {}", request.usernameOrEmail());
             throw new BadCredentialsException("Credenciais inválidas");
+
+        } catch (DisabledException e) {
+            log.error("Conta desabilitada para {}: {}", request.usernameOrEmail(), e.getMessage());
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Erro inesperado no login para {}: {}", request.usernameOrEmail(), e.getMessage(), e);
+            throw new RuntimeException("Erro interno no sistema de autenticação: " + e.getMessage(), e);
         }
     }
 
     @Transactional
     public void verifyEmail(EmailVerificationRequest request) {
-        log.info("Tentativa de verificação de email com token: {}", request.token());
+        String token = request.token();
 
-        UserEntity user = userRepository.findByEmailVerificationToken(request.token())
+        if (token == null || token.trim().isEmpty()) {
+            throw new IllegalArgumentException("Token de verificação é obrigatório");
+        }
+
+        // Buscar usuário pelo token de verificação
+        UserEntity user = userRepository.findByEmailVerificationToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("Token de verificação inválido ou expirado"));
 
         if (user.isEmailVerified()) {
             throw new IllegalArgumentException("Email já verificado");
         }
 
+        // Verificar se o token não expirou (opcional - implementar expiração)
+        // Você pode adicionar um campo emailVerificationTokenExpiry na entidade
+
+        // Marcar como verificado e limpar o token
         user.setEmailVerified(true);
-        user.setEmailVerificationToken(null);
+        user.setEmailVerificationToken(null); // Limpar o token após uso
+        user.setEmailVerifiedAt(LocalDateTime.now()); // Se tiver este campo
+
         userRepository.save(user);
 
-        // Enviar email de boas-vindas após verificação
+        // Enviar email de boas-vindas
         try {
             emailService.sendWelcomeEmail(user);
         } catch (Exception e) {
             log.error("Erro ao enviar email de boas-vindas: {}", e.getMessage());
         }
 
-        log.info("Email verificado com sucesso para usuário: {}", user.getUsername());
+        log.info("Email verificado com sucesso para usuário: {}", user.getEmail());
     }
 
     @Transactional
@@ -204,48 +243,45 @@ public class UserService {
 
     @Transactional
     public void forgotPassword(ForgotPasswordRequest request) {
-        log.info("Solicitação de recuperação de senha para email: {}", request.email());
-
         UserEntity user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new IllegalArgumentException("Email não encontrado"));
 
-        // Gerar token de reset
-        String resetToken = generatePasswordResetToken();
+        // Gerar token de reset (NÃO JWT!)
+        String resetToken = UUID.randomUUID().toString().replace("-", "") +
+                System.currentTimeMillis();
+
         user.setPasswordResetToken(resetToken);
-        user.setPasswordResetTokenExpiry(LocalDateTime.now().plusHours(2)); // Token válido por 2 horas
+        user.setPasswordResetTokenExpiry(LocalDateTime.now().plusHours(1)); // 1 hora para expirar
 
         userRepository.save(user);
 
         // Enviar email de reset
         emailService.sendPasswordReset(user, resetToken);
-        log.info("Email de recuperação de senha enviado para: {}", user.getEmail());
     }
 
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
-        log.info("Tentativa de reset de senha com token: {}", request.token());
-
-        // Validar se as senhas coincidem
         if (!request.newPassword().equals(request.confirmNewPassword())) {
-            throw new IllegalArgumentException("As senhas não coincidem");
+            throw new IllegalArgumentException("Senhas não coincidem");
         }
 
         UserEntity user = userRepository.findByPasswordResetToken(request.token())
-                .orElseThrow(() -> new IllegalArgumentException("Token de reset inválido"));
+                .orElseThrow(() -> new IllegalArgumentException("Token inválido ou expirado"));
 
-        // Verificar se token não expirou
+        // Verificar se o token não expirou
         if (user.getPasswordResetTokenExpiry().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Token de reset expirado");
+            throw new IllegalArgumentException("Token expirado");
         }
 
-        // Atualizar senha
+        // Alterar senha
         user.setPassword(passwordEncoder.encode(request.newPassword()));
-        user.setPasswordResetToken(null);
+        user.setPasswordResetToken(null); // Limpar token
         user.setPasswordResetTokenExpiry(null);
-        user.resetFailedLoginAttempts(); // Reset failed attempts
 
         userRepository.save(user);
-        log.info("Senha resetada com sucesso para usuário: {}", user.getUsername());
+
+        // Enviar notificação de alteração
+        emailService.sendPasswordChangeNotification(user);
     }
 
     @Transactional
@@ -380,5 +416,11 @@ public class UserService {
         }
 
         return token.toString();
+    }
+
+    public String generateEmailVerificationToken() {
+        // Gera um token simples e seguro para verificação de email
+        return UUID.randomUUID().toString().replace("-", "") +
+                System.currentTimeMillis();
     }
 }

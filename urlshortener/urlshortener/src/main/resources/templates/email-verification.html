@@ -1,42 +1,238 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verificação de Email</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
-        .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { text-align: center; margin-bottom: 30px; }
-        .logo { font-size: 24px; font-weight: bold; color: #3b82f6; }
-        .content { text-align: center; margin: 30px 0; }
-        .button { display: inline-block; background-color: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; }
-        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333333;
+            line-height: 1.6;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .message {
+            font-size: 16px;
+            margin-bottom: 30px;
+            color: #555555;
+        }
+
+        .verify-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+
+        .verify-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .alternative-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .alternative-section h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .token-display {
+            background-color: #ffffff;
+            border: 2px dashed #667eea;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            word-break: break-all;
+            margin: 10px 0;
+            color: #2c3e50;
+        }
+
+        .manual-link {
+            word-break: break-all;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .footer {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .security-note {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #856404;
+            font-size: 14px;
+        }
+
+        .debug-info {
+            background-color: #e9ecef;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 20px 0;
+            font-size: 12px;
+            color: #6c757d;
+            font-family: monospace;
+        }
+
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 0;
+                border-radius: 0;
+            }
+
+            .content {
+                padding: 20px 15px;
+            }
+
+            .header {
+                padding: 20px 15px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+        }
     </style>
 </head>
 <body>
-<div class="container">
+<div class="email-container">
+    <!-- Header -->
     <div class="header">
-        <div class="logo" th:text="${appName}">URL Shortener</div>
+        <h1>✉️ Verificação de Email</h1>
+        <p>Confirme seu endereço de email para ativar sua conta</p>
     </div>
 
+    <!-- Content -->
     <div class="content">
-        <h2>Verificação de Email</h2>
-        <p>Olá, <strong th:text="${userName}">Nome</strong>!</p>
-        <p>Obrigado por se cadastrar no <span th:text="${appName}">URL Shortener</span>!</p>
-        <p>Para completar seu cadastro, clique no botão abaixo para verificar seu email:</p>
+        <div class="greeting">
+            Olá, <strong th:text="${user.firstName}">Nome</strong>! 👋
+        </div>
 
-        <a th:href="${verificationUrl}" class="button">Verificar Email</a>
+        <div class="message">
+            <p>Obrigado por se cadastrar em nossa plataforma! Para completar seu cadastro e começar a usar todos os recursos, você precisa verificar seu endereço de email.</p>
 
-        <p>Se o botão não funcionar, copie e cole este link no seu navegador:</p>
-        <p><a th:href="${verificationUrl}" th:text="${verificationUrl}">Link de verificação</a></p>
+            <p>Clique no botão abaixo para verificar sua conta:</p>
+        </div>
 
-        <p><strong>Este link é válido por 24 horas.</strong></p>
+        <!-- Botão Principal -->
+        <div style="text-align: center; margin: 30px 0;">
+            <a th:href="${verificationUrl}" class="verify-button">
+                🔐 Verificar Minha Conta
+            </a>
+        </div>
+
+        <!-- Seção Alternativa -->
+        <div class="alternative-section">
+            <h3>Não consegue clicar no botão?</h3>
+            <p>Copie e cole o seguinte link no seu navegador:</p>
+            <div style="margin: 10px 0;">
+                <a th:href="${verificationUrl}" th:text="${verificationUrl}" class="manual-link">
+                    Link de verificação
+                </a>
+            </div>
+        </div>
+
+        <!-- Debug/Token Info (comentar em produção) -->
+        <div class="debug-info" style="display: none;">
+            <strong>DEBUG INFO (remover em produção):</strong><br>
+            Token: <span th:text="${token}">token-debug</span><br>
+            Token Length: <span th:text="${#strings.length(token)}">0</span><br>
+            User ID: <span th:text="${user.id}">user-id</span><br>
+            Email: <span th:text="${user.email}">user-email</span>
+        </div>
+
+        <!-- Nota de Segurança -->
+        <div class="security-note">
+            <strong>⚠️ Importante:</strong> Este link de verificação é válido por 24 horas e só pode ser usado uma vez. Se você não solicitou esta verificação, pode ignorar este email com segurança.
+        </div>
+
+        <!-- Informações do Usuário -->
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; font-size: 14px; color: #6c757d;">
+            <p><strong>Detalhes da Conta:</strong></p>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Email: <span th:text="${user.email}">user@example.com</span></li>
+                <li>Nome de usuário: <span th:text="${user.username}">username</span></li>
+                <li>Data de cadastro: <span th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm')}">Data</span></li>
+            </ul>
+        </div>
     </div>
 
+    <!-- Footer -->
     <div class="footer">
-        <p>Se você não se cadastrou em nossa plataforma, ignore este email.</p>
-        <p>&copy; 2024 <span th:text="${appName}">URL Shortener</span>. Todos os direitos reservados.</p>
+        <p>
+            Este email foi enviado automaticamente pelo sistema <strong>URLShortener</strong><br>
+            Se você não se cadastrou em nossa plataforma, pode ignorar este email.
+        </p>
+        <p style="margin-top: 15px;">
+            <a th:href="${baseUrl}">Visitar nosso site</a> |
+            <a href="mailto:suporte@urlshortener.com">Suporte</a>
+        </p>
     </div>
 </div>
 </body>

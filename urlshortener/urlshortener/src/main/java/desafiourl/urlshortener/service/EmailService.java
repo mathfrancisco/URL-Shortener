@@ -15,6 +15,8 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 @Service
@@ -34,7 +36,6 @@ public class EmailService {
     @Value("${app.url.base-url}")
     private String baseUrl;
 
-    // Nome da aplicação para usar no "From" do email
     @Value("${app.name:URLShortener}")
     private String appName;
 
@@ -42,13 +43,34 @@ public class EmailService {
         try {
             log.info("Iniciando envio de email de verificação para: {}", user.getEmail());
 
+            // Validar se o token existe
+            if (user.getEmailVerificationToken() == null || user.getEmailVerificationToken().trim().isEmpty()) {
+                log.error("Token de verificação está vazio para usuário: {}", user.getEmail());
+                throw new IllegalStateException("Token de verificação não encontrado");
+            }
+
+            // Log do token completo para debug
+            log.debug("Token completo gerado: {}", user.getEmailVerificationToken());
+            log.debug("Tamanho do token: {}", user.getEmailVerificationToken().length());
+
             Context context = createContext();
             context.setVariable("user", user);
-            context.setVariable("verificationUrl",
-                    frontendUrl + "/verify-email?token=" + user.getEmailVerificationToken());
+
+            // Construir URL de verificação com encoding adequado
+            String verificationUrl = buildVerificationUrl(user.getEmailVerificationToken());
+            context.setVariable("verificationUrl", verificationUrl);
             context.setVariable("baseUrl", baseUrl);
+            context.setVariable("token", user.getEmailVerificationToken()); // Adicionar token separado para debug
+
+            log.debug("URL de verificação construída: {}", verificationUrl);
 
             String htmlContent = templateEngine.process("email-verification", context);
+
+            // Log do conteúdo HTML para verificar se o token está completo
+            if (log.isDebugEnabled()) {
+                log.debug("Conteúdo HTML contém token: {}",
+                        htmlContent.contains(user.getEmailVerificationToken()));
+            }
 
             MimeMessage message = createMimeMessage(
                     user.getEmail(),
@@ -57,7 +79,8 @@ public class EmailService {
             );
 
             mailSender.send(message);
-            log.info("Email de verificação enviado com sucesso para: {}", user.getEmail());
+            log.info("Email de verificação enviado com sucesso para: {} com token: {}",
+                    user.getEmail(), user.getEmailVerificationToken().substring(0, 8) + "...");
 
         } catch (MessagingException e) {
             log.error("Erro de mensagem ao enviar email de verificação para {}: {}",
@@ -97,15 +120,12 @@ public class EmailService {
         } catch (MessagingException e) {
             log.error("Erro de mensagem ao enviar email de boas-vindas para {}: {}",
                     user.getEmail(), e.getMessage(), e);
-            // Não lança exceção para não quebrar o fluxo de cadastro
         } catch (MailException e) {
             log.error("Erro de envio ao enviar email de boas-vindas para {}: {}",
                     user.getEmail(), e.getMessage(), e);
-            // Não lança exceção para não quebrar o fluxo de cadastro
         } catch (Exception e) {
             log.error("Erro inesperado ao enviar email de boas-vindas para {}: {}",
                     user.getEmail(), e.getMessage(), e);
-            // Não lança exceção para não quebrar o fluxo de cadastro
         }
     }
 
@@ -113,11 +133,24 @@ public class EmailService {
         try {
             log.info("Iniciando envio de email de reset de senha para: {}", user.getEmail());
 
+            // Validar token
+            if (resetToken == null || resetToken.trim().isEmpty()) {
+                log.error("Token de reset está vazio para usuário: {}", user.getEmail());
+                throw new IllegalStateException("Token de reset não encontrado");
+            }
+
+            log.debug("Token de reset gerado: {} (tamanho: {})", resetToken, resetToken.length());
+
             Context context = createContext();
             context.setVariable("user", user);
-            context.setVariable("resetUrl",
-                    frontendUrl + "/reset-password?token=" + resetToken);
+
+            // Construir URL de reset com encoding adequado
+            String resetUrl = buildResetUrl(resetToken);
+            context.setVariable("resetUrl", resetUrl);
             context.setVariable("baseUrl", baseUrl);
+            context.setVariable("token", resetToken); // Token separado para debug
+
+            log.debug("URL de reset construída: {}", resetUrl);
 
             String htmlContent = templateEngine.process("password-reset", context);
 
@@ -128,7 +161,8 @@ public class EmailService {
             );
 
             mailSender.send(message);
-            log.info("Email de reset de senha enviado com sucesso para: {}", user.getEmail());
+            log.info("Email de reset de senha enviado com sucesso para: {} com token: {}",
+                    user.getEmail(), resetToken.substring(0, 8) + "...");
 
         } catch (MessagingException e) {
             log.error("Erro de mensagem ao enviar email de reset de senha para {}: {}",
@@ -168,15 +202,58 @@ public class EmailService {
         } catch (MessagingException e) {
             log.error("Erro de mensagem ao enviar notificação de alteração de senha para {}: {}",
                     user.getEmail(), e.getMessage(), e);
-            // Não lança exceção pois é apenas uma notificação
         } catch (MailException e) {
             log.error("Erro de envio ao enviar notificação de alteração de senha para {}: {}",
                     user.getEmail(), e.getMessage(), e);
-            // Não lança exceção pois é apenas uma notificação
         } catch (Exception e) {
             log.error("Erro inesperado ao enviar notificação de alteração de senha para {}: {}",
                     user.getEmail(), e.getMessage(), e);
-            // Não lança exceção pois é apenas uma notificação
+        }
+    }
+
+    /**
+     * Constrói a URL de verificação com encoding adequado
+     */
+    private String buildVerificationUrl(String token) {
+        try {
+            // Garantir que a URL base não termine com barra
+            String cleanFrontendUrl = frontendUrl.endsWith("/") ?
+                    frontendUrl.substring(0, frontendUrl.length() - 1) : frontendUrl;
+
+            // Encode do token para garantir que caracteres especiais sejam tratados
+            String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
+
+            String url = cleanFrontendUrl + "/verify-email?token=" + encodedToken;
+
+            log.debug("URL original: {}/verify-email?token={}", cleanFrontendUrl, token);
+            log.debug("URL com encoding: {}", url);
+
+            return url;
+        } catch (Exception e) {
+            log.error("Erro ao construir URL de verificação: {}", e.getMessage());
+            // Fallback sem encoding se houver erro
+            return frontendUrl + "/verify-email?token=" + token;
+        }
+    }
+
+    /**
+     * Constrói a URL de reset com encoding adequado
+     */
+    private String buildResetUrl(String token) {
+        try {
+            String cleanFrontendUrl = frontendUrl.endsWith("/") ?
+                    frontendUrl.substring(0, frontendUrl.length() - 1) : frontendUrl;
+
+            String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
+            String url = cleanFrontendUrl + "/reset-password?token=" + encodedToken;
+
+            log.debug("URL de reset original: {}/reset-password?token={}", cleanFrontendUrl, token);
+            log.debug("URL de reset com encoding: {}", url);
+
+            return url;
+        } catch (Exception e) {
+            log.error("Erro ao construir URL de reset: {}", e.getMessage());
+            return frontendUrl + "/reset-password?token=" + token;
         }
     }
 
@@ -196,7 +273,6 @@ public class EmailService {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        // Configurações específicas para Brevo
         helper.setFrom(fromEmail, appName);
         helper.setTo(toEmail);
         helper.setSubject(subject);
@@ -223,4 +299,30 @@ public class EmailService {
         }
     }
 
+    /**
+     * Método para debug - verifica se o token está sendo processado corretamente
+     */
+    public void debugTokenProcessing(String token, String templateName) {
+        if (!log.isDebugEnabled()) return;
+
+        try {
+            log.debug("=== DEBUG TOKEN PROCESSING ===");
+            log.debug("Template: {}", templateName);
+            log.debug("Token original: '{}'", token);
+            log.debug("Token length: {}", token != null ? token.length() : "null");
+            log.debug("Token encoded: '{}'", URLEncoder.encode(token != null ? token : "", StandardCharsets.UTF_8));
+
+            Context context = createContext();
+            context.setVariable("token", token);
+            context.setVariable("verificationUrl", frontendUrl + "/verify-email?token=" + token);
+
+            String processed = templateEngine.process(templateName, context);
+            assert token != null;
+            log.debug("Token encontrado no HTML processado: {}", processed.contains(token));
+            log.debug("================================");
+
+        } catch (Exception e) {
+            log.error("Erro no debug do token: {}", e.getMessage());
+        }
+    }
 }
