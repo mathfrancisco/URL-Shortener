@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link, TrendingUp,  MousePointerClick, Copy, CheckCircle, Activity } from 'lucide-react';
+import { Link, TrendingUp, MousePointerClick, Copy, CheckCircle, Activity } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import CreateUrlFormComponent from '@/components/forms/CreateUrlForm';
 import StatsCard from '@/components/display/StatsCard';
@@ -8,8 +9,11 @@ import { useGlobalStats } from '@/hooks/useUrls';
 
 const HomePage: React.FC = () => {
     const [createdUrl, setCreatedUrl] = useState<any>(null);
-    const [currentPath, setCurrentPath] = useState('/');
     const [copySuccess, setCopySuccess] = useState(false);
+
+    // Usar React Router hooks para navegação
+    const navigate = useNavigate();
+    const location = useLocation();
 
     // Use real analytics hooks
     const { data: dashboardStats, isPending: dashboardLoading, error: dashboardError } = useDashboardStats();
@@ -66,13 +70,15 @@ const HomePage: React.FC = () => {
         }
     };
 
+    // CORREÇÃO: Usar navigate do React Router
     const handleNavigate = (path: string) => {
-        setCurrentPath(path);
         console.log('Navigating to:', path);
+        navigate(path);
     };
 
     const handleLogout = () => {
         console.log('Logging out...');
+        // Implementar logout aqui
     };
 
     useEffect(() => {
@@ -146,7 +152,7 @@ const HomePage: React.FC = () => {
 
     return (
         <MainLayout
-            currentPath={currentPath}
+            currentPath={location.pathname} // CORREÇÃO: Usar o pathname atual
             onNavigate={handleNavigate}
             onLogout={handleLogout}
         >

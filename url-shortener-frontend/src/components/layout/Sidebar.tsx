@@ -6,7 +6,6 @@ import {
     Settings,
     HelpCircle,
     Zap,
-    Calendar,
     Shield,
     ChevronLeft,
     ChevronRight
@@ -150,36 +149,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                         </button>
                     ))}
                 </div>
-
-                {/* Stats Section */}
-                {!collapsed && (
-                    <div className="mt-8 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
-                        <h3 className="text-sm font-semibold text-gray-700 mb-3">Estatísticas Rápidas</h3>
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <Link className="w-4 h-4 text-purple-600" />
-                                    <span className="text-sm text-gray-600">URLs Criadas</span>
-                                </div>
-                                <span className="text-sm font-semibold text-gray-900">24</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <BarChart3 className="w-4 h-4 text-blue-600" />
-                                    <span className="text-sm text-gray-600">Cliques Hoje</span>
-                                </div>
-                                <span className="text-sm font-semibold text-gray-900">156</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <Calendar className="w-4 h-4 text-green-600" />
-                                    <span className="text-sm text-gray-600">Este Mês</span>
-                                </div>
-                                <span className="text-sm font-semibold text-gray-900">2.4k</span>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </nav>
 
             {/* Bottom Navigation */}

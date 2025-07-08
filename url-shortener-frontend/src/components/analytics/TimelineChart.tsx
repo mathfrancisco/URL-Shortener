@@ -26,9 +26,37 @@ interface TimelineChartProps {
     onGranularityChange: (granularity: "daily" | "hourly" | "weekly") => void;
     detailed?: boolean;
 }
+const transformTimelineData = (rawData: any): TimelineData | null => {
+    console.log('Transforming timeline data:', rawData);
+
+    if (!rawData) return null;
+
+    // Se já está no formato correto (com array data)
+    if (rawData.data && Array.isArray(rawData.data)) {
+        return rawData as TimelineData;
+    }
+
+    // Se está no formato do backend (com objeto timeline)
+    if (rawData.timeline && typeof rawData.timeline === 'object') {
+        const timelineArray = Object.entries(rawData.timeline).map(([date, clicks]) => ({
+            date,
+            clicks: clicks as number
+        })).sort((a, b) => a.date.localeCompare(b.date)); // Ordenar por data
+
+        return {
+            data: timelineArray,
+            totalClicks: rawData.totalClicks || 0,
+            totalUniqueVisitors: rawData.totalUniqueVisitors,
+            granularity: rawData.granularity || 'daily',
+            days: rawData.days || 30
+        };
+    }
+
+    return null;
+};
 
 export function TimelineChart({
-                                  data,
+                                  data: rawData,
                                   loading = false,
                                   granularity,
                                   onGranularityChange,
@@ -36,6 +64,9 @@ export function TimelineChart({
                               }: TimelineChartProps) {
     const [chartType, setChartType] = useState<"line" | "area">("area");
     const [showUniqueVisitors, setShowUniqueVisitors] = useState(false);
+
+    // ✅ TRANSFORMAR os dados aqui
+    const data = transformTimelineData(rawData);
 
     const formatDate = (dateString: string) => {
         try {
@@ -111,6 +142,7 @@ export function TimelineChart({
             </div>
         );
     }
+
 
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {

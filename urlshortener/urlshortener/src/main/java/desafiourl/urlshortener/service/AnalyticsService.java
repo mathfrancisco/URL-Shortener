@@ -164,28 +164,87 @@ public class AnalyticsService {
     }
 
     public Map<String, Object> getGeographicStats(String urlId) {
-        List<ClickEntity> clicks = clickRepository.findCountriesByUrlId(urlId);
+        logger.info("Getting geographic stats for URL: {}", urlId);
 
-        Map<String, Long> countryStats = clicks.stream()
-                .filter(click -> click.getCountry() != null && !click.getCountry().isEmpty())
+        List<ClickEntity> allClicks = clickRepository.findCountriesByUrlId(urlId);
+        logger.info("Total clicks found for URL {}: {}", urlId, allClicks.size());
+
+        // Filtrar países válidos (não "Unknown" ou "Local")
+        Map<String, Long> countryStats = allClicks.stream()
+                .filter(click -> {
+                    String country = click.getCountry();
+                    return country != null &&
+                            !country.trim().isEmpty() &&
+                            !"Unknown".equalsIgnoreCase(country) &&
+                            !"Local".equalsIgnoreCase(country);
+                })
                 .collect(Collectors.groupingBy(
                         ClickEntity::getCountry,
                         Collectors.counting()
                 ));
 
-        Map<String, Long> cityStats = clicks.stream()
-                .filter(click -> click.getCity() != null && !click.getCity().isEmpty())
+        // Filtrar cidades válidas (não "Unknown" ou "Local")
+        Map<String, Long> cityStats = allClicks.stream()
+                .filter(click -> {
+                    String city = click.getCity();
+                    String country = click.getCountry();
+
+                    // Cidade deve existir e não ser "Unknown" ou "Local"
+                    boolean validCity = city != null &&
+                            !city.trim().isEmpty() &&
+                            !"Unknown".equalsIgnoreCase(city) &&
+                            !"Local".equalsIgnoreCase(city);
+
+                    // País deve existir e não ser "Unknown" ou "Local"
+                    boolean validCountry = country != null &&
+                            !country.trim().isEmpty() &&
+                            !"Unknown".equalsIgnoreCase(country) &&
+                            !"Local".equalsIgnoreCase(country);
+
+                    return validCity && validCountry;
+                })
                 .collect(Collectors.groupingBy(
-                        ClickEntity::getCity,
+                        click -> click.getCity() + ", " + click.getCountry(),
                         Collectors.counting()
                 ));
+
+        // Contar estatísticas para debug
+        long totalClicks = allClicks.size();
+        long validCountryClicks = countryStats.values().stream().mapToLong(Long::longValue).sum();
+        long validCityClicks = cityStats.values().stream().mapToLong(Long::longValue).sum();
+        long localClicks = allClicks.stream()
+                .filter(click -> {
+                    String country = click.getCountry();
+                    return country == null ||
+                            "Unknown".equalsIgnoreCase(country) ||
+                            "Local".equalsIgnoreCase(country);
+                })
+                .mapToLong(click -> 1L)
+                .sum();
+
+        boolean geoAvailable = geoLocationService.isDatabaseAvailable();
+
+        logger.info("Geographic stats for URL {}: {} countries, {} cities, {} local/unknown, geoService available: {}",
+                urlId, countryStats.size(), cityStats.size(), localClicks, geoAvailable);
 
         Map<String, Object> geoStats = new HashMap<>();
         geoStats.put("countries", countryStats);
         geoStats.put("cities", cityStats);
         geoStats.put("topCountry", getTopEntry(countryStats));
         geoStats.put("topCity", getTopEntry(cityStats));
-        geoStats.put("geoDataAvailable", geoLocationService.isDatabaseAvailable());
+        geoStats.put("geoDataAvailable", geoAvailable);
+
+        // Estatísticas detalhadas
+        geoStats.put("totalClicks", totalClicks);
+        geoStats.put("validCountryClicks", validCountryClicks);
+        geoStats.put("validCityClicks", validCityClicks);
+        geoStats.put("localOrUnknownClicks", localClicks);
+
+        // Adicionar informação sobre cobertura
+        if (totalClicks > 0) {
+            double coveragePercentage = (double) validCountryClicks / totalClicks * 100;
+            geoStats.put("geoCoveragePercentage", Math.round(coveragePercentage * 10.0) / 10.0);
+        }
 
         return geoStats;
     }
@@ -402,6 +461,10 @@ public class AnalyticsService {
     }
 
     private String getTopEntry(Map<String, Long> stats) {
+        if (stats == null || stats.isEmpty()) {
+            return "N/A";
+        }
+
         return stats.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)

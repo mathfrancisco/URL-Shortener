@@ -15,7 +15,9 @@ const PrivatePages = {
     Home: lazy(() => import('./pages/private/Home')),
     Analytics: lazy(() => import('./pages/private/Analytics')), // Dashboard geral apenas
     UrlDetails: lazy(() => import('./pages/private/UrlDetails')),
-    Urls: lazy(() => import('./pages/private/Urls'))
+    Urls: lazy(() => import('./pages/private/Urls')),
+    Config: lazy(() => import('./pages/private/Config'))
+
 }
 
 // Loading component
@@ -75,6 +77,7 @@ export default function App() {
                         path="/analytics/:alias"
                         element={<AnalyticsRedirect />}
                     />
+                    <Route path="/settings" element={<PrivatePages.Config />} />
 
                     {/* ========== 404 ROUTE ========== */}
                     <Route path="*" element={

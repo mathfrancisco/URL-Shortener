@@ -61,12 +61,41 @@ class UrlService {
 
     // Get global statistics (mock endpoint)
     async getGlobalStats(): Promise<GlobalStatsResponse> {
-        // This would be a real endpoint in production
-        return {
-            totalUrls: 1234567,
-            totalClicks: 9876543,
-            activeUsers: 45678
-        };
+        try {
+            console.log('🔍 Fetching user-specific stats from /api/analytics/dashboard...');
+
+            const response = await api.get('/api/analytics/dashboard');
+            const dashboardData = response.data;
+
+            console.log('📊 Dashboard data received:', dashboardData);
+
+            // O endpoint /dashboard retorna estatísticas do usuário:
+            // { totalUrls, totalClicks, activeUrls, recentUrls, avgClicksPerUrl }
+            const userStats: GlobalStatsResponse = {
+                totalUrls: dashboardData.totalUrls || 0,
+                totalClicks: dashboardData.totalClicks || 0,
+                activeUsers: dashboardData.activeUrls || 0  // URLs ativas do usuário
+            };
+
+            console.log('✅ User stats mapped successfully:', userStats);
+            return userStats;
+
+        } catch (error) {
+            console.error('❌ Error fetching user dashboard stats:', error);
+            console.error('Error details:', {
+                status: error.response?.status,
+                statusText: error.response?.statusText,
+                data: error.response?.data
+            });
+
+            // Fallback final para valores zerados em caso de erro
+            console.log('⚠️ Using fallback values (zeros)');
+            return {
+                totalUrls: 0,
+                totalClicks: 0,
+                activeUsers: 0
+            };
+        }
     }
 
     // Process redirect (this happens on the server, but we might need it for preview)

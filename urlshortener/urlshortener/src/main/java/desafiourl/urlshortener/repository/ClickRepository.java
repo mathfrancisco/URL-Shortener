@@ -15,12 +15,19 @@ public interface ClickRepository extends MongoRepository<ClickEntity, String> {
 
     long countByUrlId(String urlId);
 
-    @Query(value = "{'urlId': ?0}", fields = "{'country': 1}")
+    @Query("{'urlId': ?0}")
     List<ClickEntity> findCountriesByUrlId(String urlId);
 
-    @Query(value = "{'urlId': ?0}", fields = "{'referer': 1}")
+    @Query("{'urlId': ?0}")
     List<ClickEntity> findReferersByUrlId(String urlId);
 
     @Query("{'clickedAt': {$gte: ?0}}")
     List<ClickEntity> findRecentClicks(LocalDateTime since);
+
+    // ADICIONAIS: Para melhor debugging
+    @Query(value = "{'urlId': ?0, 'country': {$ne: null, $ne: ''}}", count = true)
+    long countClicksWithGeoData(String urlId);
+
+    @Query("{'urlId': ?0, $or: [{'country': {$ne: null, $ne: ''}}, {'city': {$ne: null, $ne: ''}}]}")
+    List<ClickEntity> findClicksWithGeoData(String urlId);
 }
