@@ -48,7 +48,7 @@ export interface ForgotPasswordRequest {
 export interface ResetPasswordRequest {
     token: string;
     newPassword: string;
-    confirmPassword: string;
+    confirmNewPassword: string;
 }
 
 export interface UpdateProfileRequest {
@@ -60,7 +60,7 @@ export interface UpdateProfileRequest {
 export interface ChangePasswordRequest {
     currentPassword: string;
     newPassword: string;
-    confirmPassword: string;
+    confirmNewPassword: string;
 }
 
 // Response DTOs

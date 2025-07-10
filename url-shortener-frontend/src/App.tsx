@@ -17,7 +17,6 @@ const PrivatePages = {
     UrlDetails: lazy(() => import('./pages/private/UrlDetails')),
     Urls: lazy(() => import('./pages/private/Urls')),
     Config: lazy(() => import('./pages/private/Config'))
-
 }
 
 // Loading component
@@ -40,6 +39,11 @@ const AnalyticsRedirect = () => {
     return <Navigate to="/analytics" replace />
 }
 
+// Componente wrapper para verificação de email que aceita diferentes formatos de URL
+const VerifyEmailWrapper = () => {
+    return <PublicPages.VerifyEmail />
+}
+
 export default function App() {
     return (
         <Router>
@@ -49,7 +53,18 @@ export default function App() {
                     <Route path="/" element={<PublicPages.Home />} />
                     <Route path="/login" element={<PublicPages.Login />} />
                     <Route path="/register" element={<PublicPages.Register />} />
-                    <Route path="/verify-email" element={<PublicPages.VerifyEmail />} />
+
+                    {/* ========== EMAIL VERIFICATION ROUTES ========== */}
+                    {/* Aceita token como query parameter: /verify-email?token=abc123 */}
+                    <Route path="/verify-email" element={<VerifyEmailWrapper />} />
+
+                    {/* Aceita token como path parameter: /verify-email/abc123 */}
+                    <Route path="/verify-email/:token" element={<VerifyEmailWrapper />} />
+
+                    {/* Fallback para URLs malformadas ou sem token */}
+                    <Route path="/verify-email/*" element={<VerifyEmailWrapper />} />
+
+                    {/* Outras rotas de email */}
                     <Route path="/resend-verification" element={<PublicPages.ResendVerification />} />
                     <Route path="/email-sent" element={<PublicPages.EmailSent />} />
 
@@ -62,7 +77,7 @@ export default function App() {
                     <Route path="/analytics" element={<PrivatePages.Analytics />} />
 
                     {/* URLs Management */}
-                    <Route path="/urls" element={<PrivatePages.Urls />} /> {/* Lista de URLs - pode usar Home ou criar página dedicada */}
+                    <Route path="/urls" element={<PrivatePages.Urls />} />
 
                     {/* Detalhes Específicos da URL - NOVA ESTRUTURA */}
                     <Route path="/urls/:urlId" element={<PrivatePages.UrlDetails />} />

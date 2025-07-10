@@ -47,6 +47,7 @@ import {
     useUserStats
 } from "@/hooks/use-auth.ts";
 import MainLayout from '@/components/layout/MainLayout';
+import {toast} from "sonner";
 
 interface SettingsTabProps {
     id: string;
@@ -453,33 +454,68 @@ const ProfileSettings: React.FC = () => {
     );
 };
 
-// Security Settings Component
 const SecuritySettings: React.FC = () => {
     const { user } = useAuth();
     const changePassword = useChangePassword();
     const resendVerification = useResendEmailVerification();
+
     const [showPasswords, setShowPasswords] = useState({
         current: false,
         new: false,
         confirm: false
     });
+
+    // Estado do formulário - CORRIGIDO
     const [passwordForm, setPasswordForm] = useState({
         currentPassword: '',
         newPassword: '',
-        confirmPassword: ''
+        confirmNewPassword: ''  // ← CORRIGIDO: confirmNewPassword
     });
 
     const handlePasswordSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validações no frontend
+        if (!passwordForm.currentPassword) {
+            toast.error('Senha atual é obrigatória');
+            return;
+        }
+
+        if (!passwordForm.newPassword) {
+            toast.error('Nova senha é obrigatória');
+            return;
+        }
+
+        if (passwordForm.newPassword.length < 6) {
+            toast.error('Nova senha deve ter pelo menos 6 caracteres');
+            return;
+        }
+
+        if (!passwordForm.confirmNewPassword) {
+            toast.error('Confirmação da nova senha é obrigatória');
+            return;
+        }
+
+        if (passwordForm.newPassword !== passwordForm.confirmNewPassword) {
+            toast.error('As senhas não coincidem');
+            return;
+        }
+
         try {
             await changePassword.mutateAsync(passwordForm);
+
+            // Limpar formulário apenas após sucesso
             setPasswordForm({
                 currentPassword: '',
                 newPassword: '',
-                confirmPassword: ''
+                confirmNewPassword: ''
             });
-        } catch (error) {
+
+            toast.success('Senha alterada com sucesso!');
+
+        } catch (error: any) {
             console.error('Error changing password:', error);
+            // O erro já é tratado pelo hook com toast
         }
     };
 
@@ -535,6 +571,7 @@ const SecuritySettings: React.FC = () => {
                     <Lock className="w-5 h-5 mr-2" />
                     Alterar Senha
                 </h3>
+
                 <form onSubmit={handlePasswordSubmit} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700">
@@ -601,8 +638,8 @@ const SecuritySettings: React.FC = () => {
                         <div className="mt-1 relative">
                             <input
                                 type={showPasswords.confirm ? 'text' : 'password'}
-                                value={passwordForm.confirmPassword}
-                                onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                value={passwordForm.confirmNewPassword}
+                                onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmNewPassword: e.target.value }))}
                                 className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 pr-10"
                                 placeholder="Confirme sua nova senha"
                                 required
@@ -622,18 +659,40 @@ const SecuritySettings: React.FC = () => {
                         </div>
                     </div>
 
+                    {/* Validação visual em tempo real */}
+                    {passwordForm.newPassword && passwordForm.confirmNewPassword && passwordForm.newPassword !== passwordForm.confirmNewPassword && (
+                        <div className="text-sm text-red-600 flex items-center">
+                            <AlertTriangle className="w-4 h-4 mr-1" />
+                            As senhas não coincidem
+                        </div>
+                    )}
+
+                    {passwordForm.newPassword && passwordForm.confirmNewPassword && passwordForm.newPassword === passwordForm.confirmNewPassword && (
+                        <div className="text-sm text-green-600 flex items-center">
+                            <Shield className="w-4 h-4 mr-1" />
+                            Senhas coincidem ✓
+                        </div>
+                    )}
+
                     <div className="flex justify-end pt-4">
                         <button
                             type="submit"
-                            disabled={changePassword.isPending}
-                            className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 flex items-center"
+                            disabled={
+                                changePassword.isPending ||
+                                !passwordForm.currentPassword ||
+                                !passwordForm.newPassword ||
+                                !passwordForm.confirmNewPassword ||
+                                passwordForm.newPassword !== passwordForm.confirmNewPassword ||
+                                passwordForm.newPassword.length < 6
+                            }
+                            className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                         >
                             {changePassword.isPending ? (
                                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                             ) : (
                                 <Lock className="w-4 h-4 mr-2" />
                             )}
-                            Alterar Senha
+                            {changePassword.isPending ? 'Alterando Senha...' : 'Alterar Senha'}
                         </button>
                     </div>
                 </form>
