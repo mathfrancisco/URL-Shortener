@@ -432,6 +432,4 @@ This project demonstrates a complete and professional implementation of a URL sh
 
 This project is open source and available under the [MIT License](LICENSE).
 
----
 
-**Built with ❤️ using Spring Boot, React, and MongoDB**
