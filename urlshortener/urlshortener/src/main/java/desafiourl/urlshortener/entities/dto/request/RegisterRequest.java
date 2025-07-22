@@ -2,6 +2,7 @@ package desafiourl.urlshortener.entities.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record RegisterRequest(
@@ -28,5 +29,9 @@ public record RegisterRequest(
         @Size(min = 2, max = 50, message = "Sobrenome deve ter entre 2 e 50 caracteres")
         String lastName,
 
-        String phoneNumber
+        String phoneNumber,
+
+        // Novo campo para seleção de plano
+        @Pattern(regexp = "FREE|PREMIUM|ENTERPRISE", message = "Plano deve ser FREE, PREMIUM ou ENTERPRISE")
+        String selectedPlan
 ) {}

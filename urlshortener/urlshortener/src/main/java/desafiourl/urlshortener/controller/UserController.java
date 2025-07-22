@@ -468,6 +468,28 @@ public class UserController {
                     .body(ErrorResponse.of("Erro interno do servidor", "INTERNAL_SERVER_ERROR", 500, httpRequest.getRequestURI()));
         }
     }
+    @Operation(
+            summary = "Alterar plano do usuário",
+            description = "Permite alterar o plano de assinatura do usuário autenticado"
+    )
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/user/change-plan")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> changePlan(
+            @RequestBody ChangePlanRequest request,
+            HttpServletRequest httpRequest) {
+        try {
+            UserProfileResponse profile = userService.changePlan(request);
+            return ResponseEntity.ok(profile);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ErrorResponse.of(e.getMessage(), "INVALID_PLAN", 400, httpRequest.getRequestURI()));
+        } catch (Exception e) {
+            log.error("Erro ao alterar plano: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ErrorResponse.of("Erro interno do servidor", "INTERNAL_SERVER_ERROR", 500, httpRequest.getRequestURI()));
+        }
+    }
 
     // ========== ADMIN ENDPOINTS ==========
 

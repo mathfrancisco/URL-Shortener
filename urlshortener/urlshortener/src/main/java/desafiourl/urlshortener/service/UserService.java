@@ -6,6 +6,7 @@ import desafiourl.urlshortener.entities.dto.request.*;
 import desafiourl.urlshortener.entities.dto.response.AuthResponse;
 import desafiourl.urlshortener.entities.dto.response.UserProfileResponse;
 import desafiourl.urlshortener.entities.dto.response.UserStatsResponse;
+import desafiourl.urlshortener.entities.enums.PlanType;
 import desafiourl.urlshortener.repository.UserRepository;
 import desafiourl.urlshortener.utils.JwtUtils;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class UserService {
     private final JwtUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
+    private final PlanService planService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -61,7 +63,10 @@ public class UserService {
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
         user.setPassword(passwordEncoder.encode(request.password()));
-        user.setPlanType("FREE");
+        //user.setPlanType("FREE");
+        PlanType selectedPlan = request.selectedPlan() != null ?
+                PlanType.fromCode(request.selectedPlan()) : PlanType.FREE;
+        planService.updateUserPlan(user, selectedPlan);
         user.setEmailVerified(false);
         user.setActive(true);
         user.setRoles(List.of("USER"));
@@ -361,18 +366,72 @@ public class UserService {
         return userRepository.findByPlanType(planType);
     }
 
-    @Transactional
-    public void unlockExpiredAccounts() {
-        List<UserEntity> usersToUnlock = userRepository.findUsersToUnlock(LocalDateTime.now());
-        usersToUnlock.forEach(user -> {
-            user.resetFailedLoginAttempts();
-            log.info("Conta desbloqueada automaticamente: {}", user.getUsername());
-        });
-        userRepository.saveAll(usersToUnlock);
+    /**
+     * Método antes de criar URL - verificar limites
+     */
+    public void validateUrlCreation(UserEntity user) {
+        // Reset contador se necessário
+        planService.resetMonthlyCountIfNeeded(user);
+
+        // Verificar se pode criar URL
+        if (!planService.canCreateUrl(user)) {
+            PlanType planType = PlanType.fromCode(user.getPlanType());
+            throw new IllegalStateException(
+                    String.format("Limite de %d URLs por mês atingido. Faça upgrade do seu plano.",
+                            planType.getMonthlyUrlLimit())
+            );
+        }
+
+        // Verificar se o plano está ativo
+        if (!planService.isPlanActive(user)) {
+            throw new IllegalStateException("Seu plano expirou. Renove sua assinatura.");
+        }
     }
 
-    // Helper methods
-    private UserEntity getCurrentUserEntity() {
+    /**
+     * Incrementar contador de URLs do usuário
+     */
+    @Transactional
+    public void incrementUserUrlCount(UserEntity user) {
+        user.setCurrentMonthUrlCount(user.getCurrentMonthUrlCount() + 1);
+        userRepository.save(user);
+    }
+
+    /**
+     * Altera o plano do usuário
+     */
+    @Transactional
+    public UserProfileResponse changePlan(ChangePlanRequest request) {
+        UserEntity currentUser = getCurrentUserEntity();
+
+        // Validar se o plano solicitado é válido
+        PlanType newPlan;
+        try {
+            newPlan = PlanType.fromCode(request.planType());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Plano inválido: " + request.planType());
+        }
+
+        // Verificar se não é o mesmo plano atual
+        PlanType currentPlan = PlanType.fromCode(currentUser.getPlanType());
+        if (currentPlan == newPlan) {
+            throw new IllegalArgumentException("Você já possui o plano " + newPlan.getDisplayName());
+        }
+
+        // Atualizar plano
+        planService.updateUserPlan(currentUser, newPlan);
+
+        log.info("Plano alterado para usuário {}: {} -> {}",
+                currentUser.getUsername(), currentPlan.getDisplayName(), newPlan.getDisplayName());
+
+        // Retornar perfil atualizado
+        return buildUserProfileResponse(currentUser);
+    }
+
+    /**
+     * Método público para acessar getCurrentUserEntity
+     */
+    public UserEntity getCurrentUserEntity() {
         UserEntity currentUser = JwtAuthenticationFilter.getCurrentUser();
         if (currentUser == null) {
             throw new IllegalStateException("Usuário não autenticado");
@@ -381,6 +440,16 @@ public class UserService {
         // Buscar dados atualizados do banco
         return userRepository.findById(currentUser.getId())
                 .orElseThrow(() -> new IllegalStateException("Usuário não encontrado"));
+    }
+
+    @Transactional
+    public void unlockExpiredAccounts() {
+        List<UserEntity> usersToUnlock = userRepository.findUsersToUnlock(LocalDateTime.now());
+        usersToUnlock.forEach(user -> {
+            user.resetFailedLoginAttempts();
+            log.info("Conta desbloqueada automaticamente: {}", user.getUsername());
+        });
+        userRepository.saveAll(usersToUnlock);
     }
 
     private UserProfileResponse buildUserProfileResponse(UserEntity user) {
