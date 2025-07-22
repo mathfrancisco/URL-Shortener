@@ -1,296 +1,435 @@
-# 🚀 Encurtador de URL - Sistema Completo
+# 🚀 URL Shortener - Complete System
 
-Um sistema completo de encurtamento de URLs com funcionalidades avançadas, sistema de usuários, analytics detalhados e interface moderna.
+A comprehensive full-stack URL shortening system with advanced features, user management, detailed analytics, and modern interface.
 
-## 🎯 Sobre o Projeto
+## 🎯 Project Overview
 
-Este é um sistema full-stack completo para encurtamento de URLs que vai muito além de um simples encurtador. Oferece recursos profissionais como analytics detalhados, sistema de usuários com diferentes planos, autenticação segura, e uma interface moderna e responsiva.
+This is a complete full-stack system for URL shortening that goes far beyond a simple shortener. It offers professional features like detailed analytics, user system with different plans, secure authentication, and a modern responsive interface.
 
-## 🏗️ Arquitetura
+## 🏗️ System Architecture
 
-### Backend (API RESTful)
-
-- **Framework**: Spring Boot 3+ com Java
-- **Banco de Dados**: MongoDB (NoSQL)
-- **Autenticação**: JWT (JSON Web Tokens)
-- **Documentação**: OpenAPI 3.0/Swagger
-- **Email**: Sistema integrado para verificação e notificações
-
-### Frontend (SPA)
-
-- **Framework**: React 19 com TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
-- **Componentes**: Radix UI
-- **Roteamento**: React Router Dom
-- **Estado**: TanStack React Query
-- **Formulários**: React Hook Form + Zod
-
-## ✨ Funcionalidades Implementadas
-
-### 🔐 Sistema de Autenticação Completo
-
-- **Registro de usuários** com validação de email
-- **Login seguro** com JWT
-- **Verificação de email** obrigatória
-- **Recuperação de senha** via email
-- **Perfil de usuário** editável
-- **Alteração de senha** com validação
-
-### 🔗 Gerenciamento de URLs
-
-- **Encurtamento de URLs** com IDs únicos
-- **URLs customizadas** (alias personalizados)
-- **Expiração configurável** de URLs
-- **URLs privadas** (vinculadas ao usuário)
-- **Redirecionamento inteligente** com rastreamento
-- **QR Code** automático para todas as URLs
-
-### 📊 Analytics Avançados
-
-- **Estatísticas em tempo real** de cliques
-- **Análise geográfica** dos acessos
-- **Dispositivos e navegadores** dos visitantes
-- **Fontes de tráfego** (referrers)
-- **Timeline de cliques** com gráficos
-- **Dashboard personalizado** para cada usuário
-
-### 👥 Sistema de Usuários e Planos
-
-- **Plano FREE**: Limitações básicas
-- **Plano PREMIUM**: Recursos avançados
-- **Controle de cotas** mensais
-- **Estatísticas personalizadas** por usuário
-- **Gerenciamento de perfil** completo
-
-### 🛡️ Segurança e Qualidade
-
-- **Validação de URLs** maliciosas
-- **Rate limiting** por IP
-- **Headers de segurança** configurados
-- **Validação de dados** robusta
-- **Logs detalhados** de atividades
-- **Tratamento de erros** profissional
-
-### 🎨 Interface Moderna
-
-- **Design responsivo** para todos os dispositivos
-- **Tema claro/escuro** (implementável)
-- **Animações suaves** e transições
-- **Feedback visual** em tempo real
-- **Navegação intuitiva** com sidebar
-- **Componentes reutilizáveis**
-
-## 🛠️ Tecnologias Principais
-
-### Backend
-
-```
-Java 17+                 MongoDB Atlas
-Spring Boot 3+           Spring Security  
-Spring Data MongoDB      JWT Authentication
-Spring Mail              Bean Validation
-Swagger/OpenAPI 3        Lombok
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        A[React SPA] --> B[React Router]
+        A --> C[TanStack Query]
+        A --> D[Tailwind CSS]
+    end
+    
+    subgraph "API Gateway"
+        E[Spring Boot API]
+        F[JWT Authentication]
+        G[CORS Configuration]
+    end
+    
+    subgraph "Business Logic"
+        H[URL Service]
+        I[User Service]
+        J[Analytics Service]
+        K[Email Service]
+    end
+    
+    subgraph "Data Layer"
+        L[(MongoDB)]
+        M[User Collection]
+        N[URL Collection]
+        O[Analytics Collection]
+    end
+    
+    subgraph "External Services"
+        P[SMTP Server]
+        Q[GeoIP Service]
+    end
+    
+    A --> E
+    E --> F
+    E --> H
+    E --> I
+    E --> J
+    H --> L
+    I --> L
+    J --> L
+    K --> P
+    J --> Q
 ```
 
-### Frontend
+## 🛠️ Technology Stack
+
+### Backend Technologies
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **Java** | 21+ | Main programming language |
+| **Spring Boot** | 3.5.0 | Framework and auto-configuration |
+| **Spring Security** | 6.x | Authentication and authorization |
+| **Spring Data MongoDB** | 4.x | Database abstraction layer |
+| **MongoDB** | 7.x | NoSQL database |
+| **JWT** | 4.5.0 | Token-based authentication |
+| **Swagger/OpenAPI** | 3.0 | API documentation |
+| **JavaMail** | 2.x | Email service integration |
+| **Thymeleaf** | 3.x | Email template engine |
+| **GeoIP2** | 4.3.1 | Geographic location service |
+| **Lombok** | 1.18.x | Code generation |
+
+### Frontend Technologies
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **React** | 19.1.0 | UI framework |
+| **TypeScript** | 5.8.3 | Type-safe JavaScript |
+| **Vite** | 6.3.5 | Build tool and dev server |
+| **React Router** | 7.6.2 | Client-side routing |
+| **TanStack Query** | 5.80.7 | Server state management |
+| **Tailwind CSS** | 3.4.17 | Utility-first CSS |
+| **Radix UI** | Latest | Accessible component primitives |
+| **React Hook Form** | 7.58.0 | Form management |
+| **Zod** | 3.25.67 | Schema validation |
+| **Recharts** | 2.15.3 | Chart components |
+| **Lucide React** | 0.516.0 | Icon library |
+
+## 📁 Project Structure
 
 ```
-React 19                 Tailwind CSS
-TypeScript 5+            Radix UI
-Vite 6+                  Lucide Icons
-React Router v7          Recharts
-TanStack Query           Sonner (Toast)
-React Hook Form          Date-fns
-Zod Validation           QRCode.js
-Axios                    Class Variance Authority
-```
-
-## 📁 Estrutura do Projeto
-
-```
-encurtador-url/
-├── urlshortener/                 # Backend (Spring Boot)
+url-shortener/
+├── urlshortener/                     # Backend (Spring Boot)
 │   ├── src/main/java/
 │   │   └── desafiourl/urlshortener/
-│   │       ├── config/           # Configurações (Security, CORS, etc.)
-│   │       ├── controller/       # Controllers REST
-│   │       ├── service/          # Lógica de negócio
-│   │       ├── entities/         # Modelos e DTOs
-│   │       ├── repository/       # Acesso a dados
-│   │       └── exception/        # Tratamento de exceções
-│   └── src/main/resources/
-│       ├── templates/            # Templates de email
-│       └── application.yml       # Configurações
-└── url-shortener-frontend/      # Frontend (React)
+│   │       ├── config/               # Configuration classes
+│   │       │   ├── SecurityConfig.java
+│   │       │   ├── CorsConfig.java
+│   │       │   └── JwtAuthenticationFilter.java
+│   │       ├── controller/           # REST controllers
+│   │       │   ├── UrlController.java
+│   │       │   ├── AuthController.java
+│   │       │   ├── UserController.java
+│   │       │   └── AnalyticsController.java
+│   │       ├── service/              # Business logic
+│   │       │   ├── UrlService.java
+│   │       │   ├── UserService.java
+│   │       │   ├── EmailService.java
+│   │       │   └── AnalyticsService.java
+│   │       ├── entities/             # Data models & DTOs
+│   │       │   ├── UserEntity.java
+│   │       │   ├── UrlEntity.java
+│   │       │   ├── ClickEntity.java
+│   │       │   └── dto/
+│   │       ├── repository/           # Data access layer
+│   │       │   ├── UserRepository.java
+│   │       │   ├── UrlRepository.java
+│   │       │   └── ClickRepository.java
+│   │       ├── utils/                # Utility classes
+│   │       │   ├── JwtUtils.java
+│   │       │   └── ValidationUtils.java
+│   │       └── exception/            # Exception handling
+│   │           └── GlobalExceptionHandler.java
+│   ├── src/main/resources/
+│   │   ├── templates/                # Email templates
+│   │   │   ├── email-verification.html
+│   │   │   ├── password-reset.html
+│   │   │   └── welcome.html
+│   │   └── application.yml           # Configuration file
+│   └── pom.xml                       # Maven dependencies
+│
+└── url-shortener-frontend/          # Frontend (React)
     ├── src/
-    │   ├── components/           # Componentes reutilizáveis
-    │   ├── pages/               # Páginas (public/private)
-    │   ├── services/            # Comunicação com API
-    │   ├── hooks/               # Hooks customizados
-    │   ├── types/               # Definições TypeScript
-    │   └── lib/                 # Utilitários
-    └── public/                  # Assets estáticos
+    │   ├── components/               # Reusable components
+    │   │   ├── ui/                   # Base UI components
+    │   │   ├── layout/               # Layout components
+    │   │   ├── forms/                # Form components
+    │   │   ├── analytics/            # Analytics components
+    │   │   └── display/              # Display components
+    │   ├── pages/                    # Page components
+    │   │   ├── public/               # Public pages
+    │   │   │   ├── Home.tsx
+    │   │   │   ├── Login.tsx
+    │   │   │   └── Register.tsx
+    │   │   └── private/              # Protected pages
+    │   │       ├── Dashboard.tsx
+    │   │       ├── Analytics.tsx
+    │   │       └── Profile.tsx
+    │   ├── hooks/                    # Custom React hooks
+    │   │   ├── useAuth.ts
+    │   │   ├── useAnalytics.ts
+    │   │   └── useUrls.ts
+    │   ├── services/                 # API communication
+    │   │   ├── api.ts
+    │   │   ├── auth.service.ts
+    │   │   └── url.service.ts
+    │   ├── types/                    # TypeScript definitions
+    │   │   ├── auth.types.ts
+    │   │   ├── url.types.ts
+    │   │   └── analytics.types.ts
+    │   ├── lib/                      # Utilities
+    │   │   ├── utils.ts
+    │   │   └── validations.ts
+    │   └── config/
+    │       └── api.ts                # API configuration
+    ├── public/                       # Static assets
+    ├── package.json                  # Dependencies
+    └── vite.config.ts               # Vite configuration
 ```
 
-## 🚀 Como Executar
+## 🔄 Data Flow Architecture
 
-### Pré-requisitos
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant A as API Gateway
+    participant S as Services
+    participant D as Database
+    participant E as External APIs
 
-- Java 17+
-- Node.js 18+
-- MongoDB (local ou Atlas)
-- Git
+    U->>F: Create Short URL
+    F->>A: POST /url/shorten
+    A->>A: Validate JWT
+    A->>S: URL Service
+    S->>D: Save URL + Analytics
+    S->>E: Generate QR Code
+    S->>A: Return Response
+    A->>F: Short URL + QR Code
+    F->>U: Display Result
 
-### Backend
+    Note over U,E: URL Access Flow
+    U->>A: GET /{shortId}
+    A->>S: URL Service
+    S->>D: Find Original URL
+    S->>S: Record Click Analytics
+    S->>E: Get GeoLocation
+    S->>D: Save Click Data
+    A->>U: Redirect to Original URL
+```
+
+## ✨ Core Features
+
+### 🔐 Complete Authentication System
+- **User Registration** with email validation
+- **Secure Login** with JWT tokens
+- **Email Verification** mandatory system
+- **Password Recovery** via email
+- **User Profile** management
+- **Password Change** with validation
+
+### 🔗 Advanced URL Management
+- **URL Shortening** with unique IDs
+- **Custom Aliases** (personalized short URLs)
+- **Configurable Expiration** for URLs
+- **Private URLs** (user-linked)
+- **Smart Redirection** with tracking
+- **Automatic QR Code** generation
+
+### 📊 Comprehensive Analytics
+- **Real-time Click Statistics**
+- **Geographic Analysis** of visitors
+- **Device and Browser** analytics
+- **Traffic Sources** (referrers)
+- **Click Timeline** with charts
+- **Personalized Dashboard** per user
+
+### 👥 User Management & Plans
+- **FREE Plan**: Basic limitations
+- **PREMIUM Plan**: Advanced features
+- **Monthly Quota** control
+- **Custom Statistics** per user
+- **Complete Profile** management
+
+### 🛡️ Security & Quality
+- **Malicious URL** validation
+- **Rate Limiting** per IP
+- **Security Headers** configured
+- **Robust Data** validation
+- **Detailed Activity** logs
+- **Professional Error** handling
+
+### 🎨 Modern Interface
+- **Responsive Design** for all devices
+- **Light/Dark Theme** support
+- **Smooth Animations** and transitions
+- **Real-time Visual** feedback
+- **Intuitive Navigation** with sidebar
+- **Reusable Components**
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Java 21+**
+- **Node.js 18+**
+- **MongoDB** (local or Atlas)
+- **Git**
+
+### Backend Setup
 
 ```bash
-cd urlshortener
+# Clone the repository
+git clone <repository-url>
+cd url-shortener/urlshortener
+
+# Run the application
 ./mvnw spring-boot:run
 ```
 
-A API estará disponível em `http://localhost:8080`
+The API will be available at `http://localhost:8080`
 
-### Frontend
+### Frontend Setup
 
 ```bash
+# Navigate to frontend directory
 cd url-shortener-frontend
+
+# Install dependencies
 npm install
+
+# Start development server
 npm run dev
 ```
 
-A aplicação estará disponível em `http://localhost:5173`
+The application will be available at `http://localhost:5173`
 
-## 📋 Configuração
+## ⚙️ Configuration
 
-### Variáveis de Ambiente (Backend)
+### Backend Configuration
+
+Create `application.yml` with the following structure:
 
 ```yaml
-# application.yml
 spring:
   data:
     mongodb:
       uri: mongodb://localhost:27017/urlshortener
   mail:
     host: smtp.gmail.com
+    port: 587
     username: ${EMAIL_USERNAME}
     password: ${EMAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 app:
   jwt:
     secret: ${JWT_SECRET}
+    expiration: 86400000
   url:
     base-url: http://localhost:8080
+  frontend:
+    url: http://localhost:5173
 ```
 
-### Configuração do Frontend
+### Frontend Configuration
 
-```typescript
-// src/config/api.ts
-export const API_BASE_URL = 'http://localhost:8080/api';
+Create `.env` file:
+
+```bash
+VITE_API_BASE_URL=http://localhost:8080
+VITE_APP_NAME=URLShortener
 ```
 
-## 📚 API Endpoints
+## 📚 API Documentation
 
-### Autenticação
+### Authentication Endpoints
 
+```http
+POST   /api/auth/register          # Register user
+POST   /api/auth/login             # User login
+POST   /api/auth/verify-email      # Email verification
+POST   /api/auth/forgot-password   # Forgot password
+POST   /api/auth/reset-password    # Reset password
 ```
-POST   /api/auth/register          # Registrar usuário
-POST   /api/auth/login             # Login
-POST   /api/auth/verify-email      # Verificar email
-POST   /api/auth/forgot-password   # Esqueci a senha
-POST   /api/auth/reset-password    # Redefinir senha
-```
 
-### URLs
+### URL Management
 
-```
-POST   /url/shorten               # Encurtar URL
-GET    /{id}                      # Redirecionar
-GET    /api/urls/my-urls          # Listar minhas URLs
-GET    /api/urls/{id}/stats       # Estatísticas da URL
-PUT    /api/urls/{id}             # Atualizar metadados
-DELETE /api/urls/{id}             # Deletar URL
+```http
+POST   /url/shorten               # Shorten URL
+GET    /{id}                      # Redirect to original
+GET    /api/urls/my-urls          # List user URLs
+GET    /api/urls/{id}/stats       # URL statistics
+PUT    /api/urls/{id}             # Update metadata
+DELETE /api/urls/{id}             # Delete URL
 ```
 
 ### Analytics
 
-```
-GET    /api/analytics/url/{id}              # Analytics completos
-GET    /api/analytics/url/{id}/clicks       # Lista de cliques
-GET    /api/analytics/url/{id}/stats/geo    # Estatísticas geográficas
-GET    /api/analytics/url/{id}/stats/devices # Estatísticas de dispositivos
-```
-
-### Usuário
-
-```
-GET    /api/user/profile          # Perfil do usuário
-PUT    /api/user/profile          # Atualizar perfil
-PUT    /api/user/change-password  # Alterar senha
-GET    /api/user/stats            # Estatísticas do usuário
+```http
+GET    /api/analytics/url/{id}              # Complete analytics
+GET    /api/analytics/url/{id}/clicks       # Click list
+GET    /api/analytics/url/{id}/stats/geo    # Geographic stats
+GET    /api/analytics/url/{id}/stats/devices # Device stats
 ```
 
-## 📊 Funcionalidades de Analytics
+### User Management
 
-- **Cliques em tempo real**: Contagem instantânea de acessos
-- **Localização geográfica**: Mapa mundial de origem dos cliques
-- **Análise temporal**: Gráficos de cliques por hora/dia/mês
-- **Dispositivos**: Desktop, mobile, tablet
-- **Navegadores**: Chrome, Firefox, Safari, Edge, etc.
-- **Sistemas operacionais**: Windows, macOS, Linux, iOS, Android
-- **Fontes de tráfego**: Redes sociais, busca orgânica, direto
+```http
+GET    /api/user/profile          # User profile
+PUT    /api/user/profile          # Update profile
+PUT    /api/user/change-password  # Change password
+GET    /api/user/stats            # User statistics
+```
 
-## 🔒 Segurança Implementada
+## 📊 Analytics Features
 
-- **CORS configurado** para permitir apenas origens autorizadas
-- **Validação de entrada** em todos os endpoints
-- **Rate limiting** para prevenir abuse
-- **Sanitização de dados** contra XSS
-- **JWT com expiração** configurável
-- **Senhas criptografadas** com BCrypt
-- **Headers de segurança** (CSP, HSTS, etc.)
+The system provides comprehensive analytics including:
+
+- **Real-time Clicks**: Instant access counting
+- **Geographic Location**: World map of click origins
+- **Temporal Analysis**: Charts by hour/day/month
+- **Device Types**: Desktop, mobile, tablet
+- **Browsers**: Chrome, Firefox, Safari, Edge, etc.
+- **Operating Systems**: Windows, macOS, Linux, iOS, Android
+- **Traffic Sources**: Social media, organic search, direct
+
+## 🔒 Security Implementation
+
+- **CORS** configured for authorized origins only
+- **Input Validation** on all endpoints
+- **Rate Limiting** to prevent abuse
+- **Data Sanitization** against XSS
+- **JWT with Expiration** configurable
+- **Encrypted Passwords** with BCrypt
+- **Security Headers** (CSP, HSTS, etc.)
 
 ## 🎨 UI/UX Features
 
-- **Design System** consistente com componentes reutilizáveis
-- **Responsividade** completa (mobile-first)
-- **Loading states** em todas as operações
-- **Error boundaries** para captura de erros
-- **Toast notifications** para feedback
-- **Formulários inteligentes** com validação em tempo real
-- **Navegação fluida** sem recarregamento de página
+- **Consistent Design System** with reusable components
+- **Complete Responsiveness** (mobile-first)
+- **Loading States** in all operations
+- **Error Boundaries** for error capture
+- **Toast Notifications** for feedback
+- **Smart Forms** with real-time validation
+- **Fluid Navigation** without page reloads
 
-## 🔄 Estado Atual vs Próximos Passos
+## 🔮 Future Enhancements
 
-### ✅ Implementado
+### Planned Features
+- [ ] **Advanced Caching** with Redis
+- [ ] **Sophisticated API Rate Limiting**
+- [ ] **Automated Testing** (Jest + JUnit)
+- [ ] **CI/CD Pipeline** with GitHub Actions
+- [ ] **Monitoring** with metrics and logs
+- [ ] **Third-party Integration** API
+- [ ] **Bulk URL Operations** (import/export)
+- [ ] **Advanced User Roles** and permissions
+- [ ] **URL Categories** and tags
+- [ ] **Custom Domains** support
 
-- [x] Sistema completo de autenticação
-- [x] CRUD completo de URLs
-- [x] Analytics detalhados e gráficos
-- [x] Sistema de usuários e planos
-- [x] Interface moderna e responsiva
-- [x] API documentada com Swagger
-- [x] Validações robustas
-- [x] Sistema de emails
+## 🤝 Contributing
 
-### 🔮 Próximas Melhorias
+This project demonstrates a complete and professional implementation of a URL shortening system, serving as a reference for modern full-stack architectures.
 
-- [ ] **Cache avançado** com Redis
-- [ ] **API Rate Limiting** mais sofisticado
-- [ ] **Testes automatizados** (Jest + JUnit) 
-- [ ] **CI/CD Pipeline** com GitHub Actions
-- [ ] **Monitoramento** com métricas e logs
-- [ ] **API de integração** para terceiros
-- [ ] **Bulk URL operations** (importação/exportação)
+### Development Guidelines
 
-## 🤝 Contribuição
+1. **Backend**: Follow Spring Boot best practices
+2. **Frontend**: Use TypeScript and component composition
+3. **Database**: Optimize MongoDB queries and indexes
+4. **Security**: Implement security-first approach
+5. **Testing**: Write comprehensive tests
+6. **Documentation**: Keep API documentation updated
 
-Este projeto demonstra uma implementação completa e profissional de um sistema de encurtamento de URLs, servindo como referência para arquiteturas full-stack modernas.
+## 📄 License
 
-## 📄 Licença
+This project is open source and available under the [MIT License](LICENSE).
 
-Este projeto é open source e está disponível sob a [MIT License](LICENSE).
 
------
- 
