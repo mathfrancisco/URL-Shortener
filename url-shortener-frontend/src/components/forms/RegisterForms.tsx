@@ -21,6 +21,7 @@ const registerSchema = z.object({
     firstName: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
     lastName: z.string().min(2, 'Sobrenome deve ter pelo menos 2 caracteres'),
     phoneNumber: z.string().optional(),
+    selectedPlan: z.enum(['FREE', 'PREMIUM', 'ENTERPRISE']).optional()
 }).refine((data) => data.password === data.confirmPassword, {
     message: 'Senhas não coincidem',
     path: ['confirmPassword'],

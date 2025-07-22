@@ -165,6 +165,14 @@ class UrlService {
             return url;
         }
     }
+
+    canUseCustomAlias(userPlan: string): boolean {
+        return userPlan === 'PREMIUM' || userPlan === 'ENTERPRISE';
+    }
+
+    canCreateUrl(currentCount: number, limit: number): boolean {
+        return limit === -1 || currentCount < limit;
+    }
 }
 
 const urlService = new UrlService();

@@ -54,3 +54,38 @@ export interface GlobalStatsResponse {
     totalClicks: number;
     activeUsers: number;
 }
+
+
+export interface CreateUrlRequest {
+    originalUrl: string;
+    customAlias?: string;
+    expirationHours?: number;
+}
+
+export interface UrlEntity {
+    id: string;
+    fullUrl: string;
+    customAlias?: string;
+    createdAt: string;
+    expirationDate: string;
+    creatorIp: string;
+    userId?: string;
+    isActive: boolean;
+    clickCount: number;
+    title?: string;
+    description?: string;
+    isAuthenticatedUser?: boolean;
+}
+
+export interface UrlStatsResponse {
+    id: string;
+    shortUrl: string;
+    fullUrl: string;
+    title?: string;
+    description?: string;
+    clickCount: number;
+    createdAt: string;
+    expirationDate: string;
+    isActive: boolean;
+    lastClickAt?: string;
+}

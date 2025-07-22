@@ -1,4 +1,6 @@
 // User Types
+import type {PlanType} from "@/types/plans.types.ts";
+
 export interface User {
     id: string;
     email: string;
@@ -12,7 +14,7 @@ export interface User {
     lastLoginAt?: string;
     creatorIp: string;
     roles: string[];
-    planType: 'FREE' | 'PREMIUM' | 'ENTERPRISE';
+    planType: PlanType;
     planExpiresAt?: string;
     monthlyUrlLimit: number;
     currentMonthUrlCount: number;
@@ -30,6 +32,7 @@ export interface RegisterRequest {
     firstName: string;
     lastName: string;
     phoneNumber?: string;
+    selectedPlan:string; // 'FREE', 'PREMIUM', 'ENTERPRISE'
 }
 
 export interface LoginRequest {
@@ -46,6 +49,7 @@ export interface ForgotPasswordRequest {
 }
 
 export interface ResetPasswordRequest {
+    confirmPassword?: string;
     token: string;
     newPassword: string;
     confirmNewPassword: string;
@@ -58,6 +62,7 @@ export interface UpdateProfileRequest {
 }
 
 export interface ChangePasswordRequest {
+    confirmPassword?: string;
     currentPassword: string;
     newPassword: string;
     confirmNewPassword: string;

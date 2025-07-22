@@ -7,6 +7,7 @@ import type {
     UserProfileResponse,
     UserStatsResponse
 } from "@/types/user.types";
+import type {ChangePlanRequest} from "@/types/plans.types.ts";
 
 // Token management
 const TOKEN_KEY = 'auth_token';
@@ -252,6 +253,17 @@ export class UserService {
             return response.data;
         } catch (error: any) {
             throw this.handleError(error);
+        }
+    }
+
+    async changePlan(data: ChangePlanRequest): Promise<UserProfileResponse> {
+        try {
+            const response = await api.post<UserProfileResponse>(`api/user/change-plan`, data);
+            return response.data;
+        } catch (error: any) {
+            console.error('Erro ao alterar plano:', error);
+            const message = error.response?.data?.message || 'Erro ao alterar plano';
+            throw new Error(message);
         }
     }
 

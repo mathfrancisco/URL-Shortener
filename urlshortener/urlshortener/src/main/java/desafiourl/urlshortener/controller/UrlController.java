@@ -54,12 +54,7 @@ public class UrlController {
 
         String clientIp = getClientIpAddress(servletRequest);
 
-        ShortenUrlResponse response = urlService.createShortUrl(
-                request.url(),
-                request.customAlias(),
-                request.expirationHours(),
-                clientIp
-        );
+        ShortenUrlResponse response = urlService.createShortUrl(request, clientIp);
 
         return ResponseEntity.ok(response);
     }
@@ -134,7 +129,9 @@ public class UrlController {
     @GetMapping("/url/urls")
     public ResponseEntity<List<UrlStatsResponse>> getUserUrls(HttpServletRequest request) {
         String clientIp = getClientIpAddress(request);
-        List<UrlStatsResponse> statsResponses = urlService.getUserUrls(clientIp);
+
+        List<UrlStatsResponse> statsResponses = urlService.getAnonymousUserUrls(clientIp);
+
         return ResponseEntity.ok(statsResponses);
     }
 
